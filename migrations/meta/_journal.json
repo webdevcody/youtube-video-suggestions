@@ -8,6 +8,20 @@
       "when": 1752462403260,
       "tag": "0000_romantic_firebird",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1752462642014,
+      "tag": "0001_wooden_raza",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1752463185745,
+      "tag": "0002_chilly_star_brand",
+      "breakpoints": true
     }
   ]
 }

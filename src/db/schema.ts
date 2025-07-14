@@ -49,3 +49,15 @@ export const verification = pgTable("verification", {
   createdAt: timestamp("created_at"),
   updatedAt: timestamp("updated_at"),
 });
+
+export const todo = pgTable("todo", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id),
+  description: text("description"),
+  completed: boolean("completed").notNull().default(false),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
+});
