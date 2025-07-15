@@ -1,7 +1,6 @@
 /// <reference types="vite/client" />
 import {
   HeadContent,
-  Link,
   Outlet,
   Scripts,
   createRootRouteWithContext,
@@ -15,6 +14,9 @@ import { NotFound } from "~/components/NotFound";
 import appCss from "~/styles/app.css?url";
 import { seo } from "~/utils/seo";
 import { authClient } from "~/lib/auth-client";
+import { ThemeProvider } from "~/components/ThemeProvider";
+import { Header } from "~/components/Header";
+import { Footer } from "~/components/Footer";
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -80,34 +82,20 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const { data: session } = authClient.useSession();
 
   return (
-    <html>
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <div className="p-2 flex gap-2 text-lg">
-          {!session && (
-            <button
-              onClick={() =>
-                authClient.signIn.social({
-                  provider: "google",
-                })
-              }
-            >
-              Sign In
-            </button>
-          )}
-
-          {session && (
-            <button onClick={() => authClient.signOut()}>Sign Out</button>
-          )}
-        </div>
-        <hr />
-        {children}
-        <TanStackRouterDevtools position="bottom-right" />
-        <ReactQueryDevtools buttonPosition="bottom-left" />
-        <Scripts />
-      </body>
-    </html>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <html>
+        <head>
+          <HeadContent />
+        </head>
+        <body className="min-h-screen">
+          <Header session={session} />
+          {children}
+          <Footer />
+          <TanStackRouterDevtools position="bottom-right" />
+          <ReactQueryDevtools buttonPosition="bottom-left" />
+          <Scripts />
+        </body>
+      </html>
+    </ThemeProvider>
   );
 }

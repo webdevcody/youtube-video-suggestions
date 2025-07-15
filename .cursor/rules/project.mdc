@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+when trying to install packages, always use npm or npx.  I do not use bun or pnpm or yarn.

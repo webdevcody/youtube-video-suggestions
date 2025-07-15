@@ -61,3 +61,14 @@ export const todo = pgTable("todo", {
   createdAt: timestamp("created_at"),
   updatedAt: timestamp("updated_at"),
 });
+
+export const idea = pgTable("idea", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
+});

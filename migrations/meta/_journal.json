@@ -22,6 +22,13 @@
       "when": 1752463185745,
       "tag": "0002_chilly_star_brand",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1752588340262,
+      "tag": "0003_marvelous_scarlet_witch",
+      "breakpoints": true
     }
   ]
 }
