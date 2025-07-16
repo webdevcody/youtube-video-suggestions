@@ -17,6 +17,7 @@ import { authClient } from "~/lib/auth-client";
 import { ThemeProvider } from "~/components/ThemeProvider";
 import { Header } from "~/components/Header";
 import { Footer } from "~/components/Footer";
+import { Toaster } from "sonner";
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -88,6 +89,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <HeadContent />
         </head>
         <body className="min-h-screen">
+          <Toaster />
           <Header session={session} />
           {children}
           <Footer />

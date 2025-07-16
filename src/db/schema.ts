@@ -1,4 +1,4 @@
-import { boolean, text, timestamp, pgTable } from "drizzle-orm/pg-core";
+import { boolean, text, timestamp, pgTable, unique } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -50,18 +50,6 @@ export const verification = pgTable("verification", {
   updatedAt: timestamp("updated_at"),
 });
 
-export const todo = pgTable("todo", {
-  id: text("id").primaryKey(),
-  title: text("title").notNull(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id),
-  description: text("description"),
-  completed: boolean("completed").notNull().default(false),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
-});
-
 export const idea = pgTable("idea", {
   id: text("id").primaryKey(),
   userId: text("user_id")
@@ -72,3 +60,19 @@ export const idea = pgTable("idea", {
   createdAt: timestamp("created_at"),
   updatedAt: timestamp("updated_at"),
 });
+
+export const upvote = pgTable(
+  "upvote",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id),
+    ideaId: text("idea_id")
+      .notNull()
+      .references(() => idea.id),
+    createdAt: timestamp("created_at"),
+    updatedAt: timestamp("updated_at"),
+  },
+  (table) => [unique().on(table.userId, table.ideaId)]
+);

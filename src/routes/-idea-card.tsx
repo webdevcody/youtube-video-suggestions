@@ -7,24 +7,21 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { Trash2 } from "lucide-react";
+import { ThumbsUp } from "lucide-react";
 import { useState } from "react";
 import z from "zod";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { database } from "~/db";
 import { idea } from "~/db/schema";
+import { upvote } from "~/db/schema";
 import { authClient } from "~/lib/auth-client";
 import { isAuthenticated } from "~/utils/middleware";
+import { Button } from "~/components/ui/button";
+import { toast } from "sonner";
 
 type Idea = {
   id: string;
@@ -35,6 +32,8 @@ type Idea = {
   userId: string;
   userImage: string | null;
   userName: string | null;
+  upvoteId: string | null;
+  upvoteCount: number; // <-- add this
 };
 
 export const deleteIdeaFn = createServerFn()
@@ -53,6 +52,41 @@ export const deleteIdeaFn = createServerFn()
     return { id: data.id };
   });
 
+export const upvoteIdeaFn = createServerFn()
+  .validator(z.object({ ideaId: z.string() }))
+  .middleware([isAuthenticated])
+  .handler(async ({ data, context }) => {
+    // Only add if not already upvoted
+    const found = await database
+      .select({ id: upvote.id })
+      .from(upvote)
+      .where(
+        and(eq(upvote.ideaId, data.ideaId), eq(upvote.userId, context.userId))
+      );
+    if (!found.length) {
+      await database.insert(upvote).values({
+        id: crypto.randomUUID(),
+        ideaId: data.ideaId,
+        userId: context.userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+    return { ideaId: data.ideaId };
+  });
+
+export const removeUpvoteFn = createServerFn()
+  .validator(z.object({ ideaId: z.string() }))
+  .middleware([isAuthenticated])
+  .handler(async ({ data, context }) => {
+    await database
+      .delete(upvote)
+      .where(
+        and(eq(upvote.ideaId, data.ideaId), eq(upvote.userId, context.userId))
+      );
+    return { ideaId: data.ideaId };
+  });
+
 export function IdeaCard({ idea }: { idea: Idea }) {
   const queryClient = useQueryClient();
 
@@ -60,6 +94,26 @@ export function IdeaCard({ idea }: { idea: Idea }) {
     mutationFn: deleteIdeaFn,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ideas"] });
+    },
+  });
+
+  const { mutate: upvoteIdea } = useMutation({
+    mutationFn: upvoteIdeaFn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ideas"] });
+      toast.success("Upvoted!", {
+        description: "You have upvoted this idea.",
+      });
+    },
+  });
+
+  const { mutate: removeUpvote } = useMutation({
+    mutationFn: removeUpvoteFn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ideas"] });
+      toast.success("Removed upvote!", {
+        description: "You have removed your upvote from this idea.",
+      });
     },
   });
 
@@ -107,41 +161,63 @@ export function IdeaCard({ idea }: { idea: Idea }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Card key={idea.id}>
-        <CardHeader className="flex flex-row items-center justify-between">
+      <div className="border rounded-lg bg-card">
+        <div className="flex flex-row items-center justify-between p-4 border-b">
           <div>
-            <CardTitle>{idea.title}</CardTitle>
+            <div className="font-semibold leading-none tracking-tight mb-2">
+              {idea.title}
+            </div>
             {idea.description && (
-              <CardDescription>{idea.description}</CardDescription>
+              <div className="text-sm text-muted-foreground">
+                {idea.description}
+              </div>
             )}
           </div>
-          {idea.userId === currentUserId && (
-            <button
-              className="ml-2 text-muted-foreground hover:text-destructive"
-              aria-label="Delete idea"
-              onClick={() =>
-                setDeleteTarget({ id: idea.id, title: idea.title })
-              }
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              aria-label={idea.upvoteId ? "Remove upvote" : "Upvote"}
+              onClick={() => {
+                if (!currentUserId) return;
+                if (idea.upvoteId) {
+                  removeUpvote({ data: { ideaId: idea.id } });
+                } else {
+                  upvoteIdea({ data: { ideaId: idea.id } });
+                }
+              }}
             >
-              <Trash2 className="w-5 h-5" />
-            </button>
-          )}
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2 items-center">
-            <Avatar className="size-6">
-              <AvatarImage src={idea?.userImage ?? undefined} />
-              <AvatarFallback>{idea?.userName}</AvatarFallback>
-            </Avatar>
-            <div className="text-xs text-muted-foreground">
-              Created:{" "}
-              {idea.createdAt
-                ? new Date(idea.createdAt).toLocaleString()
-                : "Unknown"}
-            </div>
+              <ThumbsUp
+                fill={idea.upvoteId ? "currentColor" : "none"}
+                className="w-5 h-5"
+              />
+            </Button>
+            <span className="text-sm font-medium">{idea.upvoteCount}</span>
+            {idea.userId === currentUserId && (
+              <Button
+                variant="ghost"
+                aria-label="Delete idea"
+                onClick={() =>
+                  setDeleteTarget({ id: idea.id, title: idea.title })
+                }
+              >
+                <Trash2 className="w-5 h-5" />
+              </Button>
+            )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="p-4 flex gap-2 items-center">
+          <Avatar className="size-6">
+            <AvatarImage src={idea?.userImage ?? undefined} />
+            <AvatarFallback>{idea?.userName}</AvatarFallback>
+          </Avatar>
+          <div className="text-xs text-muted-foreground">
+            Created:{" "}
+            {idea.createdAt
+              ? new Date(idea.createdAt).toLocaleString()
+              : "Unknown"}
+          </div>
+        </div>
+      </div>
     </>
   );
 }

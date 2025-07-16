@@ -21,3 +21,15 @@ export const isAuthenticated = createMiddleware({
     context: { userId: session.user.id },
   });
 });
+
+export const optionalAuthentication = createMiddleware({
+  type: "function",
+}).server(async ({ next }) => {
+  const request = getWebRequest();
+
+  const session = await auth.api.getSession({ headers: request.headers });
+
+  return next({
+    context: { userId: session?.user.id },
+  });
+});

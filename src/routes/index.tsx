@@ -1,20 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { eq } from "drizzle-orm";
-import { idea, user } from "~/db/schema";
+import { eq, and, sql } from "drizzle-orm";
+import { idea, user, upvote } from "~/db/schema";
 import { database } from "~/db";
-import { isAuthenticated } from "~/utils/middleware";
+import { isAuthenticated, optionalAuthentication } from "~/utils/middleware";
 import { SubmitIdeaForm } from "./-submit-idea-form";
 import { IdeaCard } from "./-idea-card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/")({
   component: Home,
 });
 
 export const fetchIdeasFn = createServerFn()
-  .middleware([isAuthenticated])
+  .middleware([optionalAuthentication])
   .handler(async ({ context }) => {
+    const currentUserId = context?.userId;
     return await database
       .select({
         id: idea.id,
@@ -25,10 +27,44 @@ export const fetchIdeasFn = createServerFn()
         userId: idea.userId,
         userImage: user.image,
         userName: user.name,
+        upvoteId: upvote.id,
+        upvoteCount:
+          sql`(SELECT count(*) FROM upvote WHERE upvote.idea_id = ${idea.id})`.mapWith(
+            Number
+          ),
       })
       .from(idea)
-      .leftJoin(user, eq(idea.userId, user.id));
+      .leftJoin(user, eq(idea.userId, user.id))
+      .leftJoin(
+        upvote,
+        and(eq(upvote.ideaId, idea.id), eq(upvote.userId, currentUserId ?? ""))
+      )
+      .orderBy(
+        sql`(SELECT count(*) FROM upvote WHERE upvote.idea_id = ${idea.id}) DESC`
+      );
   });
+
+function IdeasSkeleton() {
+  return (
+    <div className="grid gap-4">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="border rounded-lg bg-card">
+          <div className="flex flex-row items-center justify-between p-4 border-b">
+            <div>
+              <Skeleton className="h-6 w-32 mb-2" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+            <Skeleton className="h-5 w-5 ml-2" />
+          </div>
+          <div className="p-4 flex gap-2 items-center">
+            <Skeleton className="size-6 rounded-full" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function Home() {
   const { data: ideas, isLoading } = useQuery({
@@ -40,7 +76,7 @@ function Home() {
     <div className="p-4 max-w-2xl mx-auto flex flex-col gap-12">
       <div>
         <h3 className="text-2xl font-bold mb-4">Ideas</h3>
-        {isLoading && <div>Loading...</div>}
+        {isLoading && <IdeasSkeleton />}
         {!ideas || ideas.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-6 py-12">
             <div className="text-center">
