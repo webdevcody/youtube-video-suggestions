@@ -17,6 +17,7 @@ export const fetchIdeasFn = createServerFn()
   .middleware([optionalAuthentication])
   .handler(async ({ context }) => {
     const currentUserId = context?.userId;
+    // TODO: verify this query is performant and correct
     return await database
       .select({
         id: idea.id,

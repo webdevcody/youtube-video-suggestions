@@ -25,14 +25,25 @@ import {
 import React from "react";
 import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const schema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+});
 
 export const createIdeaFn = createServerFn()
-  .validator(
-    z.object({
-      title: z.string().min(1, "Title is required"),
-      description: z.string().optional(),
-    })
-  )
+  .validator(schema)
   .middleware([isAuthenticated])
   .handler(async ({ data, context }) => {
     const newIdea = {
@@ -52,6 +63,11 @@ function IdeaFormHooked() {
   const { data: session, isPending: sessionLoading } = authClient.useSession();
   const [showLoginDialog, setShowLoginDialog] = React.useState(false);
 
+  const form = useForm<z.infer<typeof schema>>({
+    resolver: zodResolver(schema),
+    defaultValues: { title: "", description: "" },
+  });
+
   const { mutate: createIdea, isPending: isCreating } = useMutation({
     mutationFn: createIdeaFn,
     onSuccess: () => {
@@ -59,65 +75,65 @@ function IdeaFormHooked() {
       toast.success("Idea created!", {
         description: "Your idea has been submitted successfully.",
       });
+      form.reset();
     },
   });
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<{ title: string; description?: string }>();
-
-  const onSubmit = (data: { title: string; description?: string }) => {
+  const onSubmit = (data: z.infer<typeof schema>) => {
     if (!session && !sessionLoading) {
       setShowLoginDialog(true);
       return;
     }
     createIdea({ data });
-    reset();
   };
 
   return (
     <>
-      <form
-        className="w-full max-w-md mx-auto flex flex-col gap-4"
-        onSubmit={handleSubmit(onSubmit)}
-      >
-        <div>
-          <input
-            {...register("title", { required: "Title is required" })}
-            type="text"
-            placeholder="Idea title"
-            className="border rounded px-3 py-2 w-full"
-            disabled={isCreating}
-          />
-          {errors.title && (
-            <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
-          )}
-        </div>
-        <div>
-          <textarea
-            {...register("description")}
-            placeholder="Description (optional)"
-            className="border rounded px-3 py-2 w-full"
-            rows={3}
-            disabled={isCreating}
-          />
-          {errors.description && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.description.message}
-            </p>
-          )}
-        </div>
-        <button
-          type="submit"
-          className="bg-primary text-primary-foreground rounded px-4 py-2 font-semibold"
-          disabled={isCreating}
+      <Form {...form}>
+        <form
+          className="w-full mx-auto flex flex-col gap-4"
+          onSubmit={form.handleSubmit(onSubmit)}
         >
-          {isCreating ? "Creating..." : "Create Idea"}
-        </button>
-      </form>
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Title</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Idea title"
+                    disabled={isCreating}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Description (optional)"
+                    rows={3}
+                    disabled={isCreating}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit" disabled={isCreating}>
+            {isCreating ? "Creating..." : "Create Idea"}
+          </Button>
+        </form>
+      </Form>
       <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
         <DialogContent>
           <DialogHeader>

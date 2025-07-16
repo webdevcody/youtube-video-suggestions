@@ -174,23 +174,27 @@ export function IdeaCard({ idea }: { idea: Idea }) {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              aria-label={idea.upvoteId ? "Remove upvote" : "Upvote"}
-              onClick={() => {
-                if (!currentUserId) return;
-                if (idea.upvoteId) {
-                  removeUpvote({ data: { ideaId: idea.id } });
-                } else {
-                  upvoteIdea({ data: { ideaId: idea.id } });
-                }
-              }}
-            >
-              <ThumbsUp
-                fill={idea.upvoteId ? "currentColor" : "none"}
-                className="w-5 h-5"
-              />
-            </Button>
+            {currentUserId ? (
+              <Button
+                variant="ghost"
+                aria-label={idea.upvoteId ? "Remove upvote" : "Upvote"}
+                onClick={() => {
+                  if (!currentUserId) return;
+                  if (idea.upvoteId) {
+                    removeUpvote({ data: { ideaId: idea.id } });
+                  } else {
+                    upvoteIdea({ data: { ideaId: idea.id } });
+                  }
+                }}
+              >
+                <ThumbsUp
+                  fill={idea.upvoteId ? "currentColor" : "none"}
+                  className="w-5 h-5"
+                />
+              </Button>
+            ) : (
+              <ThumbsUp className="w-5 h-5 text-muted-foreground" />
+            )}
             <span className="text-sm font-medium">{idea.upvoteCount}</span>
             {idea.userId === currentUserId && (
               <Button
