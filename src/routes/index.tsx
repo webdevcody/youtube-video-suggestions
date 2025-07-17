@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { eq, and, sql } from "drizzle-orm";
-import { idea, user, upvote } from "~/db/schema";
+import { eq, and, sql, inArray } from "drizzle-orm";
+import { idea, user, upvote, ideaTag, tag } from "~/db/schema";
 import { database } from "~/db";
-import { isAuthenticated, optionalAuthentication } from "~/utils/middleware";
-import { SubmitIdeaForm } from "./-submit-idea-form";
+import { optionalAuthentication } from "~/utils/middleware";
 import { IdeaCard } from "./-idea-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -28,8 +27,8 @@ export const fetchIdeasFn = createServerFn()
   .middleware([optionalAuthentication])
   .handler(async ({ context }) => {
     const currentUserId = context?.userId;
-    // TODO: verify this query is performant and correct
-    return await database
+    // Single query: fetch ideas, user info, upvote info, and tags (as array)
+    const ideas = await database
       .select({
         id: idea.id,
         title: idea.title,
@@ -44,6 +43,9 @@ export const fetchIdeasFn = createServerFn()
           sql`(SELECT count(*) FROM upvote WHERE upvote.idea_id = ${idea.id})`.mapWith(
             Number
           ),
+        tags: sql`COALESCE(array_agg(DISTINCT jsonb_build_object('id', tag.id, 'name', tag.name)) FILTER (WHERE tag.id IS NOT NULL), '{}')`.mapWith(
+          (v) => (typeof v === "string" ? JSON.parse(v) : v)
+        ),
       })
       .from(idea)
       .leftJoin(user, eq(idea.userId, user.id))
@@ -51,9 +53,13 @@ export const fetchIdeasFn = createServerFn()
         upvote,
         and(eq(upvote.ideaId, idea.id), eq(upvote.userId, currentUserId ?? ""))
       )
+      .leftJoin(ideaTag, eq(idea.id, ideaTag.ideaId))
+      .leftJoin(tag, eq(ideaTag.tagId, tag.id))
+      .groupBy(idea.id, user.id, upvote.id)
       .orderBy(
         sql`(SELECT count(*) FROM upvote WHERE upvote.idea_id = ${idea.id}) DESC`
       );
+    return ideas;
   });
 
 function IdeasSkeleton() {

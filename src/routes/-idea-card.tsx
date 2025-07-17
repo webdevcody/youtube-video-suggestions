@@ -33,7 +33,8 @@ type Idea = {
   userImage: string | null;
   userName: string | null;
   upvoteId: string | null;
-  upvoteCount: number; // <-- add this
+  upvoteCount: number;
+  tags: { id: string; name: string }[];
 };
 
 export const deleteIdeaFn = createServerFn()
@@ -170,6 +171,18 @@ export function IdeaCard({ idea }: { idea: Idea }) {
             {idea.description && (
               <div className="text-sm text-muted-foreground">
                 {idea.description}
+              </div>
+            )}
+            {idea.tags && idea.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {idea.tags.map((tag: { id: string; name: string }) => (
+                  <span
+                    key={tag.id}
+                    className="inline-block bg-muted px-2 py-0.5 rounded-full text-xs text-muted-foreground border"
+                  >
+                    {tag.name}
+                  </span>
+                ))}
               </div>
             )}
           </div>

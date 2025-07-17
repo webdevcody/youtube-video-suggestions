@@ -99,3 +99,10 @@ export const ideaTag = pgTable(
   },
   (table) => [unique().on(table.ideaId, table.tagId)]
 );
+
+export const config = pgTable("config", {
+  id: text("id").primaryKey(), // always 'singleton' or similar
+  openaiTagGenerations: text("openai_tag_generations").notNull(), // store as string for compatibility, parse as int
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+});
