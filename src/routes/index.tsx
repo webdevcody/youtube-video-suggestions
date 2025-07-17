@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { eq, and, sql, inArray } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { idea, user, upvote, ideaTag, tag } from "~/db/schema";
 import { database } from "~/db";
 import { optionalAuthentication } from "~/utils/middleware";
@@ -27,6 +27,7 @@ export const fetchIdeasFn = createServerFn()
   .middleware([optionalAuthentication])
   .handler(async ({ context }) => {
     const currentUserId = context?.userId;
+    // TODO: make a whole dedicated video to analyze and talk about his query
     // Single query: fetch ideas, user info, upvote info, and tags (as array)
     const ideas = await database
       .select({

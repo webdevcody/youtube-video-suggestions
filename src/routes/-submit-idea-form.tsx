@@ -36,7 +36,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { env } from "~/utils/env";
 import { generateObject } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { config } from "~/db/schema";
