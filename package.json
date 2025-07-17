@@ -9,6 +9,7 @@
     "start": "vite start",
     "db:push": "drizzle-kit push --config=drizzle.config.ts",
     "db:migrate": "tsx ./src/db/migrate.ts",
+    "db:clear": "tsx ./src/db/clear.ts",
     "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
     "db:studio": "drizzle-kit studio"
   },
