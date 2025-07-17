@@ -8,6 +8,17 @@ import { isAuthenticated, optionalAuthentication } from "~/utils/middleware";
 import { SubmitIdeaForm } from "./-submit-idea-form";
 import { IdeaCard } from "./-idea-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { IdeaFormHooked } from "./-submit-idea-form";
+import React from "react";
+import { Plus } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -73,10 +84,27 @@ function Home() {
     queryFn: fetchIdeasFn,
   });
 
+  const [open, setOpen] = React.useState(false);
+
   return (
     <div className="p-4 max-w-2xl mx-auto flex flex-col gap-12">
       <div>
-        <h3 className="text-2xl font-bold mb-4">Ideas</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold">Video Suggestions</h1>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button variant="default">
+                <Plus className="h-4 w-4" /> Submit Idea
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Submit a new idea</DialogTitle>
+              </DialogHeader>
+              <IdeaFormHooked onSuccess={() => setOpen(false)} />
+            </DialogContent>
+          </Dialog>
+        </div>
         {isLoading && <IdeasSkeleton />}
         {!ideas || ideas.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-6 py-12">
@@ -88,17 +116,13 @@ function Home() {
             </div>
           </div>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid gap-4 mb-8">
             {ideas.map((idea) => (
               <IdeaCard key={idea.id} idea={idea} />
             ))}
           </div>
         )}
       </div>
-
-      <hr />
-
-      <SubmitIdeaForm />
     </div>
   );
 }

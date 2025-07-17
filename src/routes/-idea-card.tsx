@@ -191,11 +191,15 @@ export function IdeaCard({ idea }: { idea: Idea }) {
                   fill={idea.upvoteId ? "currentColor" : "none"}
                   className="w-5 h-5"
                 />
+                <span className="text-sm font-medium">{idea.upvoteCount}</span>
               </Button>
             ) : (
-              <ThumbsUp className="w-5 h-5 text-muted-foreground" />
+              <>
+                <ThumbsUp className="w-5 h-5 text-muted-foreground" />
+                <span className="text-sm font-medium">{idea.upvoteCount}</span>
+              </>
             )}
-            <span className="text-sm font-medium">{idea.upvoteCount}</span>
+
             {idea.userId === currentUserId && (
               <Button
                 variant="ghost"

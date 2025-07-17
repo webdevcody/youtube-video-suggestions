@@ -76,3 +76,26 @@ export const upvote = pgTable(
   },
   (table) => [unique().on(table.userId, table.ideaId)]
 );
+
+export const tag = pgTable("tag", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
+});
+
+export const ideaTag = pgTable(
+  "idea_tag",
+  {
+    id: text("id").primaryKey(),
+    ideaId: text("idea_id")
+      .notNull()
+      .references(() => idea.id),
+    tagId: text("tag_id")
+      .notNull()
+      .references(() => tag.id),
+    createdAt: timestamp("created_at"),
+    updatedAt: timestamp("updated_at"),
+  },
+  (table) => [unique().on(table.ideaId, table.tagId)]
+);

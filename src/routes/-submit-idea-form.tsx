@@ -10,7 +10,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { database } from "~/db";
-import { idea } from "~/db/schema";
+import { idea, tag, ideaTag } from "~/db/schema";
 import { isAuthenticated } from "~/utils/middleware";
 import { authClient } from "~/lib/auth-client";
 import {
@@ -36,6 +36,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { env } from "~/utils/env";
+import { generateObject } from "ai";
+import { openai } from "@ai-sdk/openai";
 
 const schema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -55,10 +58,69 @@ export const createIdeaFn = createServerFn()
       updatedAt: new Date(),
     };
     await database.insert(idea).values(newIdea);
+
+    // --- AI Tagging Logic (Vercel AI SDK, generateObject) ---
+    let tags: string[] = [];
+    try {
+      const prompt = `Extract 3-7 short, relevant tags (single words or short phrases, no # or @) for the following idea. Return a JSON object with a 'tags' array.\n\nTitle: ${data.title}\nDescription: ${data.description ?? ""}`;
+      const tagSchema = z.object({
+        tags: z.array(z.string().min(1).max(32)).min(3).max(7),
+      });
+      type TagResult = { tags: string[] };
+      const result = await generateObject<TagResult>({
+        model: openai("gpt-4o-mini"),
+        schema: tagSchema,
+        prompt,
+      });
+      tags =
+        result.object && Array.isArray(result.object.tags)
+          ? result.object.tags
+          : [];
+    } catch (err) {
+      tags = [];
+    }
+
+    // Insert tags and link to idea (bulk upsert)
+    if (tags.length > 0) {
+      const now = new Date();
+      // Prepare tag rows
+      const tagRows = tags.map((tagName) => ({
+        id: crypto.randomUUID(),
+        name: tagName,
+        createdAt: now,
+        updatedAt: now,
+      }));
+      // Upsert all tags (ignore if exists)
+      await database
+        .insert(tag)
+        .values(tagRows)
+        .onConflictDoNothing({ target: tag.name });
+
+      // Fetch all tag IDs for these names
+      const dbTags = await database.query.tag.findMany({
+        where: (t, { inArray }) => inArray(t.name, tags),
+      });
+      // Prepare ideaTag rows
+      const ideaTagRows = dbTags.map((t) => ({
+        id: crypto.randomUUID(),
+        ideaId: newIdea.id,
+        tagId: t.id,
+        createdAt: now,
+        updatedAt: now,
+      }));
+      // Upsert all ideaTag links (ignore if exists)
+      if (ideaTagRows.length > 0) {
+        await database
+          .insert(ideaTag)
+          .values(ideaTagRows)
+          .onConflictDoNothing({ target: [ideaTag.ideaId, ideaTag.tagId] });
+      }
+    }
+
     return newIdea;
   });
 
-function IdeaFormHooked() {
+function IdeaFormHooked({ onSuccess }: { onSuccess?: () => void } = {}) {
   const queryClient = useQueryClient();
   const { data: session, isPending: sessionLoading } = authClient.useSession();
   const [showLoginDialog, setShowLoginDialog] = React.useState(false);
@@ -76,6 +138,7 @@ function IdeaFormHooked() {
         description: "Your idea has been submitted successfully.",
       });
       form.reset();
+      if (onSuccess) onSuccess();
     },
   });
 
@@ -161,6 +224,8 @@ function IdeaFormHooked() {
     </>
   );
 }
+
+export { IdeaFormHooked };
 
 export function SubmitIdeaForm() {
   return (

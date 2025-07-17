@@ -13,7 +13,7 @@ export function Header({ session }: { session: Session | null }) {
   return (
     <div className="border-b-2 border-gray-100 dark:border-gray-900">
       <div className="items-center container mx-auto p-2 flex gap-2 text-lg justify-between">
-        <div>Video Suggestions</div>
+        <div>WDC Feedback</div>
 
         <div className="flex gap-4">
           {session && (
