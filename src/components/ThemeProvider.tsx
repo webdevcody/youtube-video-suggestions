@@ -1,4 +1,6 @@
-import { createContext, useContext, useEffect, useState } from "react";
+"use client";
+
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "dark" | "light" | "system";
 
@@ -20,50 +22,108 @@ const initialState: ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
+const getThemeFromStorage = (key: string): Theme | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const theme = localStorage.getItem(key);
+    return theme as Theme;
+  } catch (e) {
+    // In case localStorage is disabled or unavailable
+    return null;
+  }
+};
+
+const setCookie = (name: string, value: string, days: number = 365) => {
+  if (typeof document === "undefined") return;
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Lax`;
+};
+
 export function ThemeProvider({
   children,
   defaultTheme = "system",
   storageKey = "vite-ui-theme",
   ...props
 }: ThemeProviderProps) {
-  // Initialize with defaultTheme only (safe for SSR)
   const [theme, setTheme] = useState<Theme>(defaultTheme);
+  const [mounted, setMounted] = useState(false);
 
-  // Hydrate theme from localStorage on client
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const storedTheme = localStorage.getItem(storageKey) as Theme | null;
-    if (storedTheme && storedTheme !== theme) {
-      setTheme(storedTheme);
+    setMounted(true);
+    const savedTheme = getThemeFromStorage(storageKey);
+
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else {
+      // First visit - set to system theme so it can respond to OS changes
+      setTheme("system");
+
+      // Store the system preference
+      try {
+        localStorage.setItem(storageKey, "system");
+        setCookie("ui-theme", "system");
+      } catch (e) {
+        // Ignore if storage is not available
+      }
     }
-  }, [storageKey]);
+  }, [defaultTheme, storageKey]);
 
-  // Apply theme to document root on client
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!mounted) return;
+
     const root = window.document.documentElement;
     root.classList.remove("light", "dark");
+
     if (theme === "system") {
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
         .matches
         ? "dark"
         : "light";
+
       root.classList.add(systemTheme);
       return;
     }
+
     root.classList.add(theme);
-  }, [theme]);
+  }, [theme, mounted]);
+
+  // Listen for system preference changes when theme is "system"
+  useEffect(() => {
+    if (!mounted || theme !== "system") return;
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+    const handleChange = () => {
+      const root = window.document.documentElement;
+      root.classList.remove("light", "dark");
+
+      const systemTheme = mediaQuery.matches ? "dark" : "light";
+      root.classList.add(systemTheme);
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, [theme, mounted]);
 
   const value = {
     theme,
-    setTheme: (newTheme: Theme) => {
-      console.log("setting theme", newTheme);
-      if (typeof window !== "undefined") {
-        localStorage.setItem(storageKey, newTheme);
+    setTheme: (theme: Theme) => {
+      try {
+        localStorage.setItem(storageKey, theme);
+        // Also set a cookie for SSR
+        setCookie("ui-theme", theme);
+      } catch (e) {
+        // Ignore if localStorage is not available
       }
-      setTheme(newTheme);
+      setTheme(theme);
     },
   };
+
+  // Prevent flash of incorrect theme
+  if (!mounted) {
+    return <>{children}</>;
+  }
 
   return (
     <ThemeProviderContext.Provider {...props} value={value}>

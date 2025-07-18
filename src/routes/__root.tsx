@@ -80,15 +80,70 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { data: session } = authClient.useSession();
+  const { data: sessionData } = authClient.useSession();
+
+  // Transform the session data to match the Header's expected Session type
+  const session = sessionData
+    ? {
+        ...sessionData.session,
+        user: sessionData.user,
+      }
+    : null;
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <html>
-        <head>
-          <HeadContent />
-        </head>
-        <body className="min-h-screen">
+    <html suppressHydrationWarning>
+      <head>
+        <HeadContent />
+
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                // Get theme from cookie first, then localStorage
+                let theme = document.cookie.match(/ui-theme=([^;]+)/)?.[1];
+                
+                if (!theme) {
+                  try {
+                    theme = localStorage.getItem('vite-ui-theme');
+                  } catch (e) {
+                    // localStorage might not be available
+                  }
+                }
+                
+                let resolvedTheme;
+                let root = document.documentElement;
+                
+                // Clear any existing theme classes
+                root.classList.remove('light', 'dark');
+                
+                if (!theme) {
+                  // First visit - store as system theme
+                  resolvedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                  
+                  // Store as system preference
+                  try {
+                    localStorage.setItem('vite-ui-theme', 'system');
+                  } catch (e) {
+                    // localStorage might not be available
+                  }
+                  
+                  // Set cookie for SSR
+                  const expires = new Date(Date.now() + 365 * 864e5).toUTCString();
+                  document.cookie = 'ui-theme=system; expires=' + expires + '; path=/; SameSite=Lax';
+                } else if (theme === 'system') {
+                  resolvedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                } else {
+                  resolvedTheme = theme;
+                }
+                
+                root.classList.add(resolvedTheme);
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-screen">
+        <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
           <Toaster />
           <Header session={session} />
           {children}
@@ -96,8 +151,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <TanStackRouterDevtools position="bottom-right" />
           <ReactQueryDevtools buttonPosition="bottom-left" />
           <Scripts />
-        </body>
-      </html>
-    </ThemeProvider>
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }
