@@ -4,6 +4,16 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "dark" | "light" | "system";
 
+// Constants
+const THEME_COOKIE_NAME = "ui-theme";
+const COOKIE_EXPIRY_DAYS = 365;
+const MILLISECONDS_PER_DAY = 864e5;
+const DARK_MODE_MEDIA_QUERY = "(prefers-color-scheme: dark)";
+const THEME_CLASSES = {
+  LIGHT: "light",
+  DARK: "dark",
+} as const;
+
 type ThemeProviderProps = {
   children: React.ReactNode;
   defaultTheme?: Theme;
@@ -22,20 +32,21 @@ const initialState: ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
-const getThemeFromStorage = (key: string): Theme | null => {
-  if (typeof window === "undefined") return null;
-  try {
-    const theme = localStorage.getItem(key);
-    return theme as Theme;
-  } catch (e) {
-    // In case localStorage is disabled or unavailable
-    return null;
-  }
+const getThemeFromCookie = (cookieName: string): Theme | null => {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp(`(^| )${cookieName}=([^;]+)`));
+  return match ? (match[2] as Theme) : null;
 };
 
-const setCookie = (name: string, value: string, days: number = 365) => {
+const setCookie = (
+  name: string,
+  value: string,
+  days: number = COOKIE_EXPIRY_DAYS
+) => {
   if (typeof document === "undefined") return;
-  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  const expires = new Date(
+    Date.now() + days * MILLISECONDS_PER_DAY
+  ).toUTCString();
   document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Lax`;
 };
 
@@ -50,7 +61,7 @@ export function ThemeProvider({
 
   useEffect(() => {
     setMounted(true);
-    const savedTheme = getThemeFromStorage(storageKey);
+    const savedTheme = getThemeFromCookie(THEME_COOKIE_NAME);
 
     if (savedTheme) {
       setTheme(savedTheme);
@@ -58,27 +69,21 @@ export function ThemeProvider({
       // First visit - set to system theme so it can respond to OS changes
       setTheme("system");
 
-      // Store the system preference
-      try {
-        localStorage.setItem(storageKey, "system");
-        setCookie("ui-theme", "system");
-      } catch (e) {
-        // Ignore if storage is not available
-      }
+      // Store the system preference in cookie only
+      setCookie(THEME_COOKIE_NAME, "system");
     }
-  }, [defaultTheme, storageKey]);
+  }, [defaultTheme]);
 
   useEffect(() => {
     if (!mounted) return;
 
     const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
+    root.classList.remove(THEME_CLASSES.LIGHT, THEME_CLASSES.DARK);
 
     if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light";
+      const systemTheme = window.matchMedia(DARK_MODE_MEDIA_QUERY).matches
+        ? THEME_CLASSES.DARK
+        : THEME_CLASSES.LIGHT;
 
       root.classList.add(systemTheme);
       return;
@@ -91,13 +96,15 @@ export function ThemeProvider({
   useEffect(() => {
     if (!mounted || theme !== "system") return;
 
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const mediaQuery = window.matchMedia(DARK_MODE_MEDIA_QUERY);
 
     const handleChange = () => {
       const root = window.document.documentElement;
-      root.classList.remove("light", "dark");
+      root.classList.remove(THEME_CLASSES.LIGHT, THEME_CLASSES.DARK);
 
-      const systemTheme = mediaQuery.matches ? "dark" : "light";
+      const systemTheme = mediaQuery.matches
+        ? THEME_CLASSES.DARK
+        : THEME_CLASSES.LIGHT;
       root.classList.add(systemTheme);
     };
 
@@ -109,13 +116,7 @@ export function ThemeProvider({
   const value = {
     theme,
     setTheme: (theme: Theme) => {
-      try {
-        localStorage.setItem(storageKey, theme);
-        // Also set a cookie for SSR
-        setCookie("ui-theme", theme);
-      } catch (e) {
-        // Ignore if localStorage is not available
-      }
+      setCookie(THEME_COOKIE_NAME, theme);
       setTheme(theme);
     },
   };

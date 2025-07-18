@@ -99,44 +99,46 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                // Get theme from cookie first, then localStorage
-                let theme = document.cookie.match(/ui-theme=([^;]+)/)?.[1];
+                // Constants (must match ThemeProvider.tsx)
+                const THEME_COOKIE_NAME = 'ui-theme';
+                const COOKIE_EXPIRY_DAYS = 365;
+                const MILLISECONDS_PER_DAY = 864e5;
+                const DARK_MODE_MEDIA_QUERY = '(prefers-color-scheme: dark)';
+                const THEME_CLASSES = { LIGHT: 'light', DARK: 'dark' };
                 
-                if (!theme) {
-                  try {
-                    theme = localStorage.getItem('vite-ui-theme');
-                  } catch (e) {
-                    // localStorage might not be available
-                  }
-                }
+                // Get theme from cookie
+                let theme = document.cookie.match(new RegExp('(^| )' + THEME_COOKIE_NAME + '=([^;]+)'))?.[2];
                 
                 let resolvedTheme;
                 let root = document.documentElement;
                 
                 // Clear any existing theme classes
-                root.classList.remove('light', 'dark');
+                root.classList.remove(THEME_CLASSES.LIGHT, THEME_CLASSES.DARK);
                 
                 if (!theme) {
                   // First visit - store as system theme
-                  resolvedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                  resolvedTheme = window.matchMedia(DARK_MODE_MEDIA_QUERY).matches ? THEME_CLASSES.DARK : THEME_CLASSES.LIGHT;
                   
-                  // Store as system preference
-                  try {
-                    localStorage.setItem('vite-ui-theme', 'system');
-                  } catch (e) {
-                    // localStorage might not be available
-                  }
-                  
-                  // Set cookie for SSR
-                  const expires = new Date(Date.now() + 365 * 864e5).toUTCString();
-                  document.cookie = 'ui-theme=system; expires=' + expires + '; path=/; SameSite=Lax';
+                  // Set cookie with system preference
+                  const expires = new Date(Date.now() + COOKIE_EXPIRY_DAYS * MILLISECONDS_PER_DAY).toUTCString();
+                  document.cookie = THEME_COOKIE_NAME + '=system; expires=' + expires + '; path=/; SameSite=Lax';
                 } else if (theme === 'system') {
-                  resolvedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                  resolvedTheme = window.matchMedia(DARK_MODE_MEDIA_QUERY).matches ? THEME_CLASSES.DARK : THEME_CLASSES.LIGHT;
                 } else {
                   resolvedTheme = theme;
                 }
                 
                 root.classList.add(resolvedTheme);
+                
+                // Set body background immediately to prevent flash
+                const body = document.body;
+                if (resolvedTheme === THEME_CLASSES.DARK) {
+                  body.style.backgroundColor = '#111827'; // gray-900
+                  body.style.color = '#ffffff';
+                } else {
+                  body.style.backgroundColor = '#ffffff';
+                  body.style.color = '#000000';
+                }
               })();
             `,
           }}
