@@ -129,16 +129,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                 }
                 
                 root.classList.add(resolvedTheme);
-                
-                // Set body background immediately to prevent flash
-                const body = document.body;
-                if (resolvedTheme === THEME_CLASSES.DARK) {
-                  body.style.backgroundColor = '#111827'; // gray-900
-                  body.style.color = '#ffffff';
-                } else {
-                  body.style.backgroundColor = '#ffffff';
-                  body.style.color = '#000000';
-                }
               })();
             `,
           }}

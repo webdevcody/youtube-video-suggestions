@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { upvoteIdeaFn } from "../-actions/upvoteIdeaFn";
 import { removeUpvoteFn } from "../-actions/removeUpvoteFn";
 import { deleteIdeaFn } from "../-actions/deleteIdeaFn";
+import { IdeaTag } from "./IdeaTag";
 
 type Idea = {
   id: string;
@@ -96,20 +97,18 @@ export function IdeaCard({ idea, onTagClick, selectedTags }: IdeaCardProps) {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <button
-              className="bg-destructive text-white rounded px-4 py-2 font-semibold"
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button
+              variant="destructive"
               onClick={() => {
                 if (deleteTarget) deleteIdea({ data: { id: deleteTarget.id } });
                 setDeleteTarget(null);
               }}
             >
-              Delete {deleteTarget?.id}
-            </button>
-            <DialogClose asChild>
-              <button className="rounded px-4 py-2 font-semibold border">
-                Cancel
-              </button>
-            </DialogClose>
+              Delete
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -126,22 +125,14 @@ export function IdeaCard({ idea, onTagClick, selectedTags }: IdeaCardProps) {
             )}
             {idea.tags && idea.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
-                {idea.tags.map((tag: { id: string; name: string }) => {
-                  const isSelected = selectedTags.includes(tag.name);
-                  return (
-                    <button
-                      key={tag.id}
-                      onClick={() => onTagClick(tag.name)}
-                      className={`inline-block px-2 py-0.5 rounded-full text-xs border transition-colors hover:scale-105 ${
-                        isSelected
-                          ? "bg-primary/20 text-primary border-primary/40 shadow-sm"
-                          : "bg-muted text-muted-foreground border-muted-foreground/20 hover:bg-muted-foreground/10 hover:border-muted-foreground/40"
-                      }`}
-                    >
-                      {tag.name}
-                    </button>
-                  );
-                })}
+                {idea.tags.map((tag: { id: string; name: string }) => (
+                  <IdeaTag
+                    key={tag.id}
+                    name={tag.name}
+                    isSelected={selectedTags.includes(tag.name)}
+                    onClick={onTagClick}
+                  />
+                ))}
               </div>
             )}
           </div>

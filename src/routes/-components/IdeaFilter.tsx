@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
+import { IdeaTag } from "./IdeaTag";
 
 interface IdeaFilterProps {
   searchTerm: string;
@@ -46,20 +47,12 @@ export function IdeaFilter({
           </div>
           <div className="flex flex-wrap gap-2">
             {selectedTags.map((tag) => (
-              <div
+              <IdeaTag
                 key={tag}
-                className="inline-flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-full text-xs border border-primary/20"
-              >
-                <span>{tag}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onRemoveTag(tag)}
-                  className="h-4 w-4 p-0 hover:bg-primary/20 rounded-full"
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
+                name={tag}
+                variant="filter"
+                onRemove={onRemoveTag}
+              />
             ))}
           </div>
         </div>
