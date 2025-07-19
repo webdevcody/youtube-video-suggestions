@@ -1,11 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { eq, and, sql } from "drizzle-orm";
-import { idea, user, upvote, ideaTag, tag } from "~/db/schema";
-import { database } from "~/db";
-import { optionalAuthentication } from "~/utils/middleware";
-import { IdeaCard } from "./-idea-card";
+import { IdeaCard } from "./-components/IdeaCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,53 +10,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { IdeaFormHooked } from "./-submit-idea-form";
+import { IdeaFormHooked } from "./-components/SubmitIdeaForm";
 import React from "react";
 import { Plus } from "lucide-react";
+import { getIdeasFn } from "./-actions/getIdeasFn";
+import { IdeaFilter } from "./-components/IdeaFilter";
 
 export const Route = createFileRoute("/")({
   component: Home,
 });
-
-export const fetchIdeasFn = createServerFn()
-  .middleware([optionalAuthentication])
-  .handler(async ({ context }) => {
-    const currentUserId = context?.userId;
-    // TODO: make a whole dedicated video to analyze and talk about his query
-    // Single query: fetch ideas, user info, upvote info, and tags (as array)
-    const ideas = await database
-      .select({
-        id: idea.id,
-        title: idea.title,
-        description: idea.description,
-        createdAt: idea.createdAt,
-        updatedAt: idea.updatedAt,
-        userId: idea.userId,
-        userImage: user.image,
-        userName: user.name,
-        upvoteId: upvote.id,
-        upvoteCount:
-          sql`(SELECT count(*) FROM upvote WHERE upvote.idea_id = ${idea.id})`.mapWith(
-            Number
-          ),
-        tags: sql`COALESCE(array_agg(DISTINCT jsonb_build_object('id', tag.id, 'name', tag.name)) FILTER (WHERE tag.id IS NOT NULL), '{}')`.mapWith(
-          (v) => (typeof v === "string" ? JSON.parse(v) : v)
-        ),
-      })
-      .from(idea)
-      .leftJoin(user, eq(idea.userId, user.id))
-      .leftJoin(
-        upvote,
-        and(eq(upvote.ideaId, idea.id), eq(upvote.userId, currentUserId ?? ""))
-      )
-      .leftJoin(ideaTag, eq(idea.id, ideaTag.ideaId))
-      .leftJoin(tag, eq(ideaTag.tagId, tag.id))
-      .groupBy(idea.id, user.id, upvote.id)
-      .orderBy(
-        sql`(SELECT count(*) FROM upvote WHERE upvote.idea_id = ${idea.id}) DESC`
-      );
-    return ideas;
-  });
 
 function IdeasSkeleton() {
   return (
@@ -88,10 +45,64 @@ function IdeasSkeleton() {
 function Home() {
   const { data: ideas, isLoading } = useQuery({
     queryKey: ["ideas"],
-    queryFn: fetchIdeasFn,
+    queryFn: getIdeasFn,
   });
 
   const [open, setOpen] = React.useState(false);
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
+
+  // Function to toggle tag selection
+  const toggleTag = (tagName: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tagName)
+        ? prev.filter((tag) => tag !== tagName)
+        : [...prev, tagName]
+    );
+  };
+
+  // Function to remove a specific tag
+  const removeTag = (tagName: string) => {
+    setSelectedTags((prev) => prev.filter((tag) => tag !== tagName));
+  };
+
+  // Function to clear all selected tags
+  const clearAllTags = () => {
+    setSelectedTags([]);
+  };
+
+  // Filter ideas based on search term and selected tags
+  const filteredIdeas = React.useMemo(() => {
+    if (!ideas) {
+      return [];
+    }
+
+    let filtered = ideas;
+
+    // Filter by search term
+    if (searchTerm.trim()) {
+      const lowercaseSearch = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (idea) =>
+          idea.title.toLowerCase().includes(lowercaseSearch) ||
+          (idea.description &&
+            idea.description.toLowerCase().includes(lowercaseSearch))
+      );
+    }
+
+    // Filter by selected tags
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter((idea) =>
+        selectedTags.every((selectedTag) =>
+          idea.tags.some(
+            (tag: { id: string; name: string }) => tag.name === selectedTag
+          )
+        )
+      );
+    }
+
+    return filtered;
+  }, [ideas, searchTerm, selectedTags]);
 
   return (
     <div className="p-4 max-w-2xl mx-auto flex flex-col gap-12">
@@ -112,20 +123,40 @@ function Home() {
             </DialogContent>
           </Dialog>
         </div>
+
+        <IdeaFilter
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          selectedTags={selectedTags}
+          onRemoveTag={removeTag}
+          onClearAllTags={clearAllTags}
+        />
+
         {isLoading && <IdeasSkeleton />}
-        {!ideas || ideas.length === 0 ? (
+        {!filteredIdeas || filteredIdeas.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-6 py-12">
             <div className="text-center">
-              <h4 className="text-lg font-semibold mb-2">No ideas yet</h4>
+              <h4 className="text-lg font-semibold mb-2">
+                {searchTerm.trim() || selectedTags.length > 0
+                  ? "No matching ideas found"
+                  : "No ideas yet"}
+              </h4>
               <p className="text-muted-foreground mb-4">
-                Create or upload your first idea suggestion below!
+                {searchTerm.trim() || selectedTags.length > 0
+                  ? "Try adjusting your search terms or filters, or create a new idea."
+                  : "Create or upload your first idea suggestion below!"}
               </p>
             </div>
           </div>
         ) : (
           <div className="grid gap-4 mb-8">
-            {ideas.map((idea) => (
-              <IdeaCard key={idea.id} idea={idea} />
+            {filteredIdeas.map((idea) => (
+              <IdeaCard
+                key={idea.id}
+                idea={idea}
+                onTagClick={toggleTag}
+                selectedTags={selectedTags}
+              />
             ))}
           </div>
         )}

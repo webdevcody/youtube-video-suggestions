@@ -3,4 +3,22 @@ description:
 globs: 
 alwaysApply: true
 ---
+# Project Tech Requirements
+
+Before implementing code, read through these to make sure you follow our coding guide.
+
+## NPM Requirements
 when trying to install packages, always use npm or npx.  I do not use bun or pnpm or yarn.
+
+
+## Component System
+We are using ShadCN for our component library, always check if there is an existing shadcn component first before trying to implement you own.
+
+## Form Library
+We are using react-hook-form with client side validation using zod.  Make sure all forms have some type of client side validation
+
+## Loader Buttons
+All buttons should show a loader spinner inside them while the form is being submitted
+
+## Data Fetching
+We should always use useQuery and useMutation when trying to fetch or store data.  These should always invoke a tanstack server function.  See [-fetchIdeasFn.tsx](mdc:src/routes/-fetchIdeasFn.tsx) for an example of a server function for fetching.  See [-createIdeaFn.tsx](mdc:src/routes/-createIdeaFn.tsx) for example of a server function which does a mutation.

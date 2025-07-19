@@ -8,20 +8,16 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createServerFn } from "@tanstack/react-start";
-import { eq, and } from "drizzle-orm";
 import { Trash2 } from "lucide-react";
 import { ThumbsUp } from "lucide-react";
 import { useState } from "react";
-import z from "zod";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
-import { database } from "~/db";
-import { idea } from "~/db/schema";
-import { upvote } from "~/db/schema";
 import { authClient } from "~/lib/auth-client";
-import { isAuthenticated } from "~/utils/middleware";
 import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
+import { upvoteIdeaFn } from "../-actions/upvoteIdeaFn";
+import { removeUpvoteFn } from "../-actions/removeUpvoteFn";
+import { deleteIdeaFn } from "../-actions/deleteIdeaFn";
 
 type Idea = {
   id: string;
@@ -37,58 +33,13 @@ type Idea = {
   tags: { id: string; name: string }[];
 };
 
-export const deleteIdeaFn = createServerFn()
-  .validator(z.object({ id: z.string() }))
-  .middleware([isAuthenticated])
-  .handler(async ({ data, context }) => {
-    // Only allow deleting if the user owns the idea
-    const found = await database
-      .select({ userId: idea.userId })
-      .from(idea)
-      .where(eq(idea.id, data.id));
-    if (!found.length || found[0].userId !== context.userId) {
-      throw new Error("Unauthorized");
-    }
-    await database.delete(idea).where(eq(idea.id, data.id));
-    return { id: data.id };
-  });
+interface IdeaCardProps {
+  idea: Idea;
+  onTagClick: (tagName: string) => void;
+  selectedTags: string[];
+}
 
-export const upvoteIdeaFn = createServerFn()
-  .validator(z.object({ ideaId: z.string() }))
-  .middleware([isAuthenticated])
-  .handler(async ({ data, context }) => {
-    // Only add if not already upvoted
-    const found = await database
-      .select({ id: upvote.id })
-      .from(upvote)
-      .where(
-        and(eq(upvote.ideaId, data.ideaId), eq(upvote.userId, context.userId))
-      );
-    if (!found.length) {
-      await database.insert(upvote).values({
-        id: crypto.randomUUID(),
-        ideaId: data.ideaId,
-        userId: context.userId,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-    }
-    return { ideaId: data.ideaId };
-  });
-
-export const removeUpvoteFn = createServerFn()
-  .validator(z.object({ ideaId: z.string() }))
-  .middleware([isAuthenticated])
-  .handler(async ({ data, context }) => {
-    await database
-      .delete(upvote)
-      .where(
-        and(eq(upvote.ideaId, data.ideaId), eq(upvote.userId, context.userId))
-      );
-    return { ideaId: data.ideaId };
-  });
-
-export function IdeaCard({ idea }: { idea: Idea }) {
+export function IdeaCard({ idea, onTagClick, selectedTags }: IdeaCardProps) {
   const queryClient = useQueryClient();
 
   const { mutate: deleteIdea } = useMutation({
@@ -152,7 +103,7 @@ export function IdeaCard({ idea }: { idea: Idea }) {
                 setDeleteTarget(null);
               }}
             >
-              Delete
+              Delete {deleteTarget?.id}
             </button>
             <DialogClose asChild>
               <button className="rounded px-4 py-2 font-semibold border">
@@ -175,14 +126,22 @@ export function IdeaCard({ idea }: { idea: Idea }) {
             )}
             {idea.tags && idea.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
-                {idea.tags.map((tag: { id: string; name: string }) => (
-                  <span
-                    key={tag.id}
-                    className="inline-block bg-muted px-2 py-0.5 rounded-full text-xs text-muted-foreground border"
-                  >
-                    {tag.name}
-                  </span>
-                ))}
+                {idea.tags.map((tag: { id: string; name: string }) => {
+                  const isSelected = selectedTags.includes(tag.name);
+                  return (
+                    <button
+                      key={tag.id}
+                      onClick={() => onTagClick(tag.name)}
+                      className={`inline-block px-2 py-0.5 rounded-full text-xs border transition-colors hover:scale-105 ${
+                        isSelected
+                          ? "bg-primary/20 text-primary border-primary/40 shadow-sm"
+                          : "bg-muted text-muted-foreground border-muted-foreground/20 hover:bg-muted-foreground/10 hover:border-muted-foreground/40"
+                      }`}
+                    >
+                      {tag.name}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

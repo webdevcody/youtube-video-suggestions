@@ -70,7 +70,7 @@ export const upvote = pgTable(
       .references(() => user.id),
     ideaId: text("idea_id")
       .notNull()
-      .references(() => idea.id),
+      .references(() => idea.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at"),
     updatedAt: timestamp("updated_at"),
   },
@@ -90,7 +90,7 @@ export const ideaTag = pgTable(
     id: text("id").primaryKey(),
     ideaId: text("idea_id")
       .notNull()
-      .references(() => idea.id),
+      .references(() => idea.id, { onDelete: "cascade" }),
     tagId: text("tag_id")
       .notNull()
       .references(() => tag.id),
