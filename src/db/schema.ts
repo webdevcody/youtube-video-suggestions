@@ -1,4 +1,11 @@
-import { boolean, text, timestamp, pgTable, unique } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  text,
+  timestamp,
+  pgTable,
+  unique,
+  index,
+} from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -50,16 +57,20 @@ export const verification = pgTable("verification", {
   updatedAt: timestamp("updated_at"),
 });
 
-export const idea = pgTable("idea", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id),
-  title: text("title").notNull(),
-  description: text("description"),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
-});
+export const idea = pgTable(
+  "idea",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id),
+    title: text("title").notNull(),
+    description: text("description"),
+    createdAt: timestamp("created_at"),
+    updatedAt: timestamp("updated_at"),
+  },
+  (table) => [index("idx_idea_user_id").on(table.userId)]
+);
 
 export const upvote = pgTable(
   "upvote",
@@ -74,7 +85,11 @@ export const upvote = pgTable(
     createdAt: timestamp("created_at"),
     updatedAt: timestamp("updated_at"),
   },
-  (table) => [unique().on(table.userId, table.ideaId)]
+  (table) => [
+    unique().on(table.userId, table.ideaId),
+    index("idx_upvote_idea_id").on(table.ideaId),
+    index("idx_upvote_user_id").on(table.userId),
+  ]
 );
 
 export const tag = pgTable("tag", {
@@ -97,7 +112,11 @@ export const ideaTag = pgTable(
     createdAt: timestamp("created_at"),
     updatedAt: timestamp("updated_at"),
   },
-  (table) => [unique().on(table.ideaId, table.tagId)]
+  (table) => [
+    unique().on(table.ideaId, table.tagId),
+    index("idx_idea_tag_idea_id").on(table.ideaId),
+    index("idx_idea_tag_tag_id").on(table.tagId),
+  ]
 );
 
 export const config = pgTable("config", {

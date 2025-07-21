@@ -13,7 +13,14 @@ export function Header({ session }: { session: Session | null }) {
   return (
     <div className="border-b-2 border-gray-100 dark:border-gray-900">
       <div className="items-center container mx-auto p-2 flex gap-2 text-lg justify-between">
-        <div>WDC Feedback</div>
+        <div className="flex items-center gap-2">
+          <img
+            src="/wdc.jpg"
+            alt="WDC Feedback"
+            className="h-10 rounded-full"
+          />
+          Web Dev Cody
+        </div>
 
         <div className="flex gap-4">
           {session && (

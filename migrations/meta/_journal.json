@@ -57,6 +57,13 @@
       "when": 1752883190812,
       "tag": "0007_gray_bushwacker",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1753105418819,
+      "tag": "0008_nice_betty_ross",
+      "breakpoints": true
     }
   ]
 }
