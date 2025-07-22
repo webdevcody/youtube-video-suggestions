@@ -73,6 +73,7 @@ export function IdeaCard({ idea, onTagClick, selectedTags }: IdeaCardProps) {
   // Get current user id from session
   const { data: session } = authClient.useSession();
   const currentUserId = session?.user?.id;
+  const isAdmin = session?.user?.email === "webdevcody@gmail.com";
 
   // Track which idea is being deleted and modal open state
   const [deleteTarget, setDeleteTarget] = useState<null | {
@@ -112,69 +113,71 @@ export function IdeaCard({ idea, onTagClick, selectedTags }: IdeaCardProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className="border rounded-lg bg-card">
-        <div className="flex flex-row items-center justify-between p-4 border-b">
-          <div>
-            <div className="font-semibold leading-none tracking-tight mb-2">
-              {idea.title}
-            </div>
-            {idea.description && (
-              <div className="text-sm text-muted-foreground">
-                {idea.description}
-              </div>
-            )}
-            {idea.tags && idea.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {idea.tags.map((tag: { id: string; name: string }) => (
-                  <IdeaTag
-                    key={tag.id}
-                    name={tag.name}
-                    isSelected={selectedTags.includes(tag.name)}
-                    onClick={onTagClick}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {currentUserId ? (
-              <Button
-                variant="ghost"
-                aria-label={idea.upvoteId ? "Remove upvote" : "Upvote"}
-                onClick={() => {
-                  if (!currentUserId) return;
-                  if (idea.upvoteId) {
-                    removeUpvote({ data: { ideaId: idea.id } });
-                  } else {
-                    upvoteIdea({ data: { ideaId: idea.id } });
-                  }
-                }}
-              >
-                <ThumbsUp
-                  fill={idea.upvoteId ? "currentColor" : "none"}
-                  className="w-5 h-5"
-                />
-                <span className="text-sm font-medium">{idea.upvoteCount}</span>
-              </Button>
-            ) : (
-              <>
-                <ThumbsUp className="w-5 h-5 text-muted-foreground" />
-                <span className="text-sm font-medium">{idea.upvoteCount}</span>
-              </>
-            )}
-
-            {idea.userId === currentUserId && (
-              <Button
-                variant="ghost"
-                aria-label="Delete idea"
-                onClick={() =>
-                  setDeleteTarget({ id: idea.id, title: idea.title })
+      <div className="border rounded-lg bg-card relative">
+        {/* Absolutely positioned action buttons in top right */}
+        <div className="absolute top-2 right-2 flex items-center gap-1 z-10">
+          {currentUserId ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label={idea.upvoteId ? "Remove upvote" : "Upvote"}
+              onClick={() => {
+                if (!currentUserId) return;
+                if (idea.upvoteId) {
+                  removeUpvote({ data: { ideaId: idea.id } });
+                } else {
+                  upvoteIdea({ data: { ideaId: idea.id } });
                 }
-              >
-                <Trash2 className="w-5 h-5" />
-              </Button>
-            )}
+              }}
+            >
+              <ThumbsUp
+                fill={idea.upvoteId ? "currentColor" : "none"}
+                className="w-4 h-4"
+              />
+              <span className="text-sm font-medium">{idea.upvoteCount}</span>
+            </Button>
+          ) : (
+            <div className="flex items-center gap-1 px-2 py-1">
+              <ThumbsUp className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">{idea.upvoteCount}</span>
+            </div>
+          )}
+
+          {(idea.userId === currentUserId || isAdmin) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label="Delete idea"
+              onClick={() =>
+                setDeleteTarget({ id: idea.id, title: idea.title })
+              }
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+
+        <div className="p-4 pr-20 border-b">
+          <div className="font-semibold leading-none tracking-tight mb-2">
+            {idea.title}
           </div>
+          {idea.description && (
+            <div className="text-sm text-muted-foreground">
+              {idea.description}
+            </div>
+          )}
+          {idea.tags && idea.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {idea.tags.map((tag: { id: string; name: string }) => (
+                <IdeaTag
+                  key={tag.id}
+                  name={tag.name}
+                  isSelected={selectedTags.includes(tag.name)}
+                  onClick={onTagClick}
+                />
+              ))}
+            </div>
+          )}
         </div>
         <div className="p-4 flex gap-2 items-center">
           <Avatar className="size-6">

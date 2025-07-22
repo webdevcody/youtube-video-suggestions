@@ -73,16 +73,18 @@ export function TagBrowser({
       <p className="text-sm text-muted-foreground">
         Click on tags to filter ideas. Selected tags will be combined.
       </p>
-      <div className="flex flex-wrap gap-2">
-        {allTags.map((tag) => (
-          <div key={tag.id} className="flex items-center gap-2 my-1">
-            <IdeaTag
-              name={`${tag.name} (${tag.count})`}
-              isSelected={selectedTags.includes(tag.name)}
-              onClick={() => onTagClick(tag.name)}
-            />
-          </div>
-        ))}
+      <div className="max-h-96 overflow-y-auto border rounded-lg p-4 bg-muted/30">
+        <div className="flex flex-wrap gap-2">
+          {allTags.map((tag) => (
+            <div key={tag.id} className="flex items-center gap-2 my-1">
+              <IdeaTag
+                name={`${tag.name} (${tag.count})`}
+                isSelected={selectedTags.includes(tag.name)}
+                onClick={() => onTagClick(tag.name)}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

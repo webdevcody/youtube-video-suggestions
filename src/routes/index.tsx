@@ -106,7 +106,7 @@ function Home() {
   }, [ideas, searchTerm, selectedTags]);
 
   return (
-    <div className="p-4 max-w-7xl mx-auto">
+    <div className="p-4 container mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content Area */}
         <div className="lg:col-span-2">
@@ -136,33 +136,35 @@ function Home() {
           />
 
           {isLoading && <IdeasSkeleton />}
-          {!filteredIdeas || filteredIdeas.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-6 py-12">
-              <div className="text-center">
-                <h4 className="text-lg font-semibold mb-2">
-                  {searchTerm.trim() || selectedTags.length > 0
-                    ? "No matching ideas found"
-                    : "No ideas yet"}
-                </h4>
-                <p className="text-muted-foreground mb-4">
-                  {searchTerm.trim() || selectedTags.length > 0
-                    ? "Try adjusting your search terms or filters, or create a new idea."
-                    : "Create or upload your first idea suggestion below!"}
-                </p>
+          <div className="h-[calc(100vh-200px)] overflow-y-auto">
+            {!filteredIdeas || filteredIdeas.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-6 py-12">
+                <div className="text-center">
+                  <h4 className="text-lg font-semibold mb-2">
+                    {searchTerm.trim() || selectedTags.length > 0
+                      ? "No matching ideas found"
+                      : "No ideas yet"}
+                  </h4>
+                  <p className="text-muted-foreground mb-4">
+                    {searchTerm.trim() || selectedTags.length > 0
+                      ? "Try adjusting your search terms or filters, or create a new idea."
+                      : "Create or upload your first idea suggestion below!"}
+                  </p>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="grid gap-4 mb-8">
-              {filteredIdeas.map((idea) => (
-                <IdeaCard
-                  key={idea.id}
-                  idea={idea}
-                  onTagClick={toggleTag}
-                  selectedTags={selectedTags}
-                />
-              ))}
-            </div>
-          )}
+            ) : (
+              <div className="grid gap-4 mb-8 pr-2">
+                {filteredIdeas.map((idea) => (
+                  <IdeaCard
+                    key={idea.id}
+                    idea={idea}
+                    onTagClick={toggleTag}
+                    selectedTags={selectedTags}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Tag Browser Sidebar */}

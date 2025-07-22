@@ -38,6 +38,19 @@ export const getIdeasFn = createServerFn()
           id as upvote_id
         FROM upvote 
         WHERE user_id = ${currentUserId ?? ""}
+      ),
+      idea_tags_agg AS (
+        SELECT 
+          it.idea_id,
+          array_agg(
+            DISTINCT jsonb_build_object(
+              'id', t.id, 
+              'name', t.name
+            )
+          ) as tags
+        FROM idea_tag it
+        LEFT JOIN tag t ON it.tag_id = t.id
+        GROUP BY it.idea_id
       )
       SELECT 
         i.id,
@@ -50,32 +63,12 @@ export const getIdeasFn = createServerFn()
         u.name as "userName",
         uu.upvote_id as "upvoteId",
         COALESCE(iuc.upvote_count, 0) as "upvoteCount",
-        COALESCE(
-          array_agg(
-            DISTINCT jsonb_build_object(
-              'id', t.id, 
-              'name', t.name
-            )
-          ) FILTER (WHERE t.id IS NOT NULL),
-          '{}'::jsonb[]
-        ) as tags
+        COALESCE(ita.tags, '{}'::jsonb[]) as tags
       FROM idea i
       LEFT JOIN "user" u ON i.user_id = u.id
       LEFT JOIN idea_upvote_counts iuc ON i.id = iuc.idea_id
       LEFT JOIN user_upvotes uu ON i.id = uu.idea_id
-      LEFT JOIN idea_tag it ON i.id = it.idea_id
-      LEFT JOIN tag t ON it.tag_id = t.id
-      GROUP BY 
-        i.id, 
-        i.title, 
-        i.description, 
-        i.created_at, 
-        i.updated_at, 
-        i.user_id,
-        u.image, 
-        u.name, 
-        uu.upvote_id,
-        iuc.upvote_count
+      LEFT JOIN idea_tags_agg ita ON i.id = ita.idea_id
       ORDER BY COALESCE(iuc.upvote_count, 0) DESC
     `);
 

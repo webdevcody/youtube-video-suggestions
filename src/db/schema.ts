@@ -87,8 +87,8 @@ export const upvote = pgTable(
   },
   (table) => [
     unique().on(table.userId, table.ideaId),
-    index("idx_upvote_idea_id").on(table.ideaId),
     index("idx_upvote_user_id").on(table.userId),
+    index("idx_upvote_idea_user_composite").on(table.ideaId, table.userId),
   ]
 );
 
@@ -114,8 +114,8 @@ export const ideaTag = pgTable(
   },
   (table) => [
     unique().on(table.ideaId, table.tagId),
-    index("idx_idea_tag_idea_id").on(table.ideaId),
     index("idx_idea_tag_tag_id").on(table.tagId),
+    index("idx_idea_tag_composite").on(table.ideaId, table.tagId),
   ]
 );
 

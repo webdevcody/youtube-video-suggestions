@@ -32,9 +32,8 @@ export const Route = createRootRouteWithContext<{
         content: "width=device-width, initial-scale=1",
       },
       ...seo({
-        title:
-          "TanStack Start | Type-Safe, Client-First, Full-Stack React Framework",
-        description: `TanStack Start is a type-safe, client-first, full-stack React framework. `,
+        title: "Web Dev Cody | Video Ideas",
+        description: `Submit and vote on video ideas for Web Dev Cody. Share your suggestions for tutorials, projects, and coding content.`,
       }),
     ],
     links: [

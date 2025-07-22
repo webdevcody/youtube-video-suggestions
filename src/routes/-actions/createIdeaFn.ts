@@ -7,6 +7,7 @@ import { generateObject } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { config } from "~/db/schema";
 import { eq } from "drizzle-orm";
+import { Filter } from "bad-words";
 
 const schema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -20,11 +21,20 @@ export const createIdeaFn = createServerFn()
   .validator(schema)
   .middleware([isAuthenticated])
   .handler(async ({ data, context }) => {
+    // Initialize profanity filter
+    const profanityFilter = new Filter();
+
+    // Filter bad words from title and description
+    const filteredTitle = profanityFilter.clean(data.title);
+    const filteredDescription = data.description
+      ? profanityFilter.clean(data.description)
+      : null;
+
     const newIdea = {
       id: crypto.randomUUID(),
       userId: context.userId as string,
-      title: data.title,
-      description: data.description ?? null,
+      title: filteredTitle,
+      description: filteredDescription,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -40,7 +50,7 @@ export const createIdeaFn = createServerFn()
     let usedOpenAI = false;
     if (openaiTagGenerations < MAX_OPENAI_TAG_GENERATIONS) {
       try {
-        const prompt = `Extract 3-7 short, relevant tags (single words or short phrases, no # or @) for the following idea. Return a JSON object with a 'tags' array.\n\nTitle: ${data.title}\nDescription: ${data.description ?? ""}`;
+        const prompt = `Extract 3-7 short, relevant tags (single words or short phrases, no # or @) for the following idea. Return a JSON object with a 'tags' array.\n\nTitle: ${filteredTitle}\nDescription: ${filteredDescription ?? ""}`;
         const tagSchema = z.object({
           tags: z.array(z.string().min(1).max(32)).min(3).max(7),
         });

@@ -33,3 +33,30 @@ export const optionalAuthentication = createMiddleware({
     context: { userId: session?.user.id },
   });
 });
+
+/**
+ * Middleware that ensures the user is authenticated AND is an admin
+ */
+export const isAdmin = createMiddleware({
+  type: "function",
+}).server(async ({ next }) => {
+  const request = getWebRequest();
+
+  if (!request?.headers) {
+    throw redirect({ to: "/" });
+  }
+
+  const session = await auth.api.getSession({ headers: request.headers });
+
+  if (!session) {
+    throw redirect({ to: "/" });
+  }
+
+  if (session.user.email !== "webdevcody@gmail.com") {
+    throw new Error("Unauthorized: Admin access required");
+  }
+
+  return next({
+    context: { userId: session.user.id, isAdmin: true },
+  });
+});

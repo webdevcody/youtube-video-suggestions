@@ -9,6 +9,7 @@ import {
 import { Session } from "better-auth";
 import { authClient } from "~/lib/auth-client";
 import { Link } from "@tanstack/react-router";
+import { Button } from "./ui/button";
 
 export function Header({ session }: { session: Session | null }) {
   return (
@@ -41,7 +42,7 @@ export function Header({ session }: { session: Session | null }) {
           )}
 
           {!session && (
-            <button
+            <Button
               onClick={() =>
                 authClient.signIn.social({
                   provider: "google",
@@ -49,7 +50,7 @@ export function Header({ session }: { session: Session | null }) {
               }
             >
               Sign In
-            </button>
+            </Button>
           )}
           <ModeToggle />
         </div>
