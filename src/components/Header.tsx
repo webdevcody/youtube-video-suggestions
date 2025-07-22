@@ -8,19 +8,20 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { Session } from "better-auth";
 import { authClient } from "~/lib/auth-client";
+import { Link } from "@tanstack/react-router";
 
 export function Header({ session }: { session: Session | null }) {
   return (
     <div className="border-b-2 border-gray-100 dark:border-gray-900">
       <div className="items-center container mx-auto p-2 flex gap-2 text-lg justify-between">
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <img
             src="/wdc.jpg"
             alt="WDC Feedback"
             className="h-10 rounded-full"
           />
           Web Dev Cody
-        </div>
+        </Link>
 
         <div className="flex gap-4">
           {session && (

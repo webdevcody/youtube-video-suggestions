@@ -79,7 +79,7 @@ export function TagBrowser({
             <IdeaTag
               name={`${tag.name} (${tag.count})`}
               isSelected={selectedTags.includes(tag.name)}
-              onClick={onTagClick}
+              onClick={() => onTagClick(tag.name)}
             />
           </div>
         ))}
