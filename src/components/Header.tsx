@@ -11,7 +11,15 @@ import { authClient } from "~/lib/auth-client";
 import { Link } from "@tanstack/react-router";
 import { Button } from "./ui/button";
 
-export function Header({ session }: { session: Session | null }) {
+export function Header({
+  isAuthenticated,
+  image,
+  name,
+}: {
+  isAuthenticated: boolean;
+  image: string;
+  name: string;
+}) {
   return (
     <div className="border-b-2 border-gray-100 dark:border-gray-900">
       <div className="items-center container mx-auto p-2 flex gap-2 text-lg justify-between">
@@ -25,12 +33,12 @@ export function Header({ session }: { session: Session | null }) {
         </Link>
 
         <div className="flex gap-4">
-          {session && (
+          {isAuthenticated && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar>
-                  <AvatarImage src={session?.user.image} />
-                  <AvatarFallback>{session?.user.name}</AvatarFallback>
+                  <AvatarImage src={image} />
+                  <AvatarFallback>{name}</AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -41,7 +49,7 @@ export function Header({ session }: { session: Session | null }) {
             </DropdownMenu>
           )}
 
-          {!session && (
+          {!isAuthenticated && (
             <Button
               onClick={() =>
                 authClient.signIn.social({

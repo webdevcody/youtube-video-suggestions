@@ -136,7 +136,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body className="min-h-screen">
         <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
           <Toaster />
-          <Header session={session} />
+          <Header
+            isAuthenticated={!!session}
+            image={session?.user.image ?? ""}
+            name={session?.user.name ?? ""}
+          />
           {children}
           <Footer />
           <TanStackRouterDevtools position="bottom-right" />

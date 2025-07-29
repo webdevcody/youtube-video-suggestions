@@ -2,6 +2,8 @@ node_modules
 package-lock.json
 yarn.lock
 
+.nitro/
+.tanstack/
 .DS_Store
 .cache
 .env

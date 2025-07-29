@@ -5,8 +5,8 @@ type Idea = {
   id: string;
   title: string;
   description: string | null;
-  createdAt: Date | null;
-  updatedAt: Date | null;
+  createdAt: string | null;
+  updatedAt: string | null;
   userId: string;
   userImage: string | null;
   userName: string | null;
