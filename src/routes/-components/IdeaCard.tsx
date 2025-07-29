@@ -89,17 +89,21 @@ export function IdeaCard({ idea, onTagClick, selectedTags }: IdeaCardProps) {
           if (!open) setDeleteTarget(null);
         }}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Delete Idea</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-xl font-semibold">
+              Delete Idea
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Are you sure you want to delete "{deleteTarget?.title}"? This
               action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="gap-3">
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline" className="flex-1">
+                Cancel
+              </Button>
             </DialogClose>
             <Button
               variant="destructive"
@@ -107,15 +111,16 @@ export function IdeaCard({ idea, onTagClick, selectedTags }: IdeaCardProps) {
                 if (deleteTarget) deleteIdea({ data: { id: deleteTarget.id } });
                 setDeleteTarget(null);
               }}
+              className="flex-1"
             >
               Delete
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className="border rounded-lg bg-card relative">
+      <div className="relative modern-card group">
         {/* Absolutely positioned action buttons in top right */}
-        <div className="absolute top-2 right-2 flex items-center gap-1 z-10">
+        <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
           {currentUserId ? (
             <Button
               variant="ghost"
@@ -129,16 +134,19 @@ export function IdeaCard({ idea, onTagClick, selectedTags }: IdeaCardProps) {
                   upvoteIdea({ data: { ideaId: idea.id } });
                 }
               }}
+              className="hover:bg-blue-500/10 hover:text-blue-500 transition-all duration-200"
             >
               <ThumbsUp
                 fill={idea.upvoteId ? "currentColor" : "none"}
-                className="w-4 h-4"
+                className={`w-5 h-5 ${idea.upvoteId ? "text-blue-500" : "text-muted-foreground"}`}
               />
-              <span className="text-sm font-medium">{idea.upvoteCount}</span>
+              <span className="text-sm font-medium ml-1">
+                {idea.upvoteCount}
+              </span>
             </Button>
           ) : (
-            <div className="flex items-center gap-1 px-2 py-1">
-              <ThumbsUp className="w-4 h-4 text-muted-foreground" />
+            <div className="flex items-center gap-1 px-3 py-2 rounded-lg bg-muted/50">
+              <ThumbsUp className="w-5 h-5 text-muted-foreground" />
               <span className="text-sm font-medium">{idea.upvoteCount}</span>
             </div>
           )}
@@ -151,23 +159,24 @@ export function IdeaCard({ idea, onTagClick, selectedTags }: IdeaCardProps) {
               onClick={() =>
                 setDeleteTarget({ id: idea.id, title: idea.title })
               }
+              className="hover:bg-red-500/10 hover:text-red-500 transition-all duration-200"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-5 h-5" />
             </Button>
           )}
         </div>
 
-        <div className="p-4 pr-20 border-b">
-          <div className="font-semibold leading-none tracking-tight mb-4 text-2xl">
+        <div className="pr-24">
+          <div className="font-bold leading-tight tracking-tight mb-4 text-2xl gradient-text group-hover:from-blue-600 group-hover:to-purple-700 transition-all duration-300">
             {idea.title}
           </div>
           {idea.description && (
-            <div className="text-sm text-muted-foreground mb-4">
+            <div className="text-muted-foreground mb-6 leading-relaxed">
               {idea.description}
             </div>
           )}
           {idea.tags && idea.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
+            <div className="flex flex-wrap gap-2 mb-6">
               {idea.tags.map((tag: { id: string; name: string }) => (
                 <IdeaTag
                   key={tag.id}
@@ -179,16 +188,29 @@ export function IdeaCard({ idea, onTagClick, selectedTags }: IdeaCardProps) {
             </div>
           )}
         </div>
-        <div className="p-4 flex gap-2 items-center">
-          <Avatar className="size-6">
+
+        <div className="flex items-center gap-3 pt-4 border-t border-border/50">
+          <Avatar className="size-8 ring-2 ring-border">
             <AvatarImage src={idea?.userImage ?? undefined} />
-            <AvatarFallback>{idea?.userName}</AvatarFallback>
+            <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm">
+              {idea?.userName?.charAt(0) || "U"}
+            </AvatarFallback>
           </Avatar>
-          <div className="text-xs text-muted-foreground">
-            Created:{" "}
-            {idea.createdAt
-              ? new Date(idea.createdAt).toLocaleString()
-              : "Unknown"}
+          <div className="flex flex-col">
+            <div className="text-sm font-medium text-foreground">
+              {idea?.userName || "Anonymous"}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {idea.createdAt
+                ? new Date(idea.createdAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : "Unknown date"}
+            </div>
           </div>
         </div>
       </div>

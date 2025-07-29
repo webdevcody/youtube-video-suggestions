@@ -19,6 +19,7 @@
   .using-mouse * {
     outline: none !important;
   }
+  
   :root {
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
@@ -44,33 +45,40 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
     
     /* Tag color lightness values for light mode */
     --tag-default-lightness: 35%;
     --tag-selected-lightness: 30%;
     --tag-filter-lightness: 35%;
+    
+    /* New gradient colors for modern look */
+    --gradient-primary: 240 100% 60%;
+    --gradient-secondary: 280 100% 60%;
+    --glow-primary: 240 100% 60%;
+    --glow-secondary: 280 100% 60%;
   }
+  
   .dark {
-    --background: 0 0% 3.9%;
+    --background: 220 23% 6%;
     --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
+    --card: 220 23% 8%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
+    --popover: 220 23% 8%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
+    --primary: 240 100% 60%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 220 23% 12%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
+    --muted: 220 23% 12%;
     --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
+    --accent: 280 100% 60%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    --border: 220 23% 15%;
+    --input: 220 23% 15%;
+    --ring: 240 100% 60%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -81,10 +89,14 @@
     --tag-default-lightness: 65%;
     --tag-selected-lightness: 70%;
     --tag-filter-lightness: 65%;
+    
+    /* New gradient colors for modern look */
+    --gradient-primary: 240 100% 60%;
+    --gradient-secondary: 280 100% 60%;
+    --glow-primary: 240 100% 60%;
+    --glow-secondary: 280 100% 60%;
   }
 }
-
-
 
 @layer base {
   * {
@@ -92,5 +104,40 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .gradient-text {
+    @apply bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent;
+  }
+  
+  .glow-border {
+    @apply border border-transparent bg-gradient-to-r from-blue-500/20 to-purple-600/20 bg-clip-border;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.1), 0 0 40px rgba(147, 51, 234, 0.1);
+  }
+  
+  .glow-border:hover {
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.2), 0 0 60px rgba(147, 51, 234, 0.2);
+  }
+  
+  .modern-card {
+    @apply bg-card border border-border rounded-xl p-6 transition-all duration-300;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  .modern-card:hover {
+    @apply border-blue-500/30 dark:border-purple-500/30;
+    box-shadow: 0 10px 25px -3px rgba(59, 130, 246, 0.1), 0 4px 6px -2px rgba(147, 51, 234, 0.1);
+  }
+  
+  .modern-button {
+    @apply bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium px-6 py-3 rounded-xl transition-all duration-300;
+    box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.3);
+  }
+  
+  .modern-button:hover {
+    box-shadow: 0 6px 20px 0 rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
   }
 }

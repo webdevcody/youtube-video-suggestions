@@ -73,7 +73,7 @@ function IdeaFormHooked({ onSuccess }: { onSuccess?: () => void } = {}) {
     <>
       <Form {...form}>
         <form
-          className="w-full mx-auto flex flex-col gap-4"
+          className="w-full mx-auto flex flex-col gap-6"
           onSubmit={form.handleSubmit(onSubmit)}
         >
           <FormField
@@ -81,16 +81,17 @@ function IdeaFormHooked({ onSuccess }: { onSuccess?: () => void } = {}) {
             name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Title</FormLabel>
+                <FormLabel className="text-base font-semibold">Title</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="Idea title"
+                    placeholder="Enter your video idea title..."
                     disabled={isCreating}
                     maxLength={IDEA_LIMITS.title}
+                    className="h-12 text-base rounded-xl border-border/50 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all duration-200"
                     {...field}
                   />
                 </FormControl>
-                <div className="text-right text-xs text-muted-foreground">
+                <div className="text-right text-sm text-muted-foreground">
                   {field.value?.length || 0}/{IDEA_LIMITS.title}
                 </div>
                 <FormMessage />
@@ -102,26 +103,36 @@ function IdeaFormHooked({ onSuccess }: { onSuccess?: () => void } = {}) {
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Description</FormLabel>
+                <FormLabel className="text-base font-semibold">
+                  Description
+                </FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Description (optional)"
-                    rows={3}
+                    placeholder="Describe your video idea in detail (optional)..."
+                    rows={4}
                     disabled={isCreating}
                     maxLength={IDEA_LIMITS.description}
+                    className="text-base rounded-xl border-border/50 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all duration-200 resize-none"
                     {...field}
                   />
                 </FormControl>
-                <div className="text-right text-xs text-muted-foreground">
+                <div className="text-right text-sm text-muted-foreground">
                   {field.value?.length || 0}/{IDEA_LIMITS.description}
                 </div>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button type="submit" disabled={isCreating}>
+          <Button
+            type="submit"
+            disabled={isCreating}
+            className="modern-button h-12 text-base font-semibold"
+          >
             {isCreating ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <>
+                <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                Creating Idea...
+              </>
             ) : (
               "Create Idea"
             )}
@@ -129,25 +140,30 @@ function IdeaFormHooked({ onSuccess }: { onSuccess?: () => void } = {}) {
         </form>
       </Form>
       <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Login Required</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-xl font-semibold">
+              Login Required
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               You must be logged in to submit an idea. Please login to continue.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="gap-3">
             <Button
               onClick={() =>
                 authClient.signIn.social({
                   provider: "google",
                 })
               }
+              className="modern-button flex-1"
             >
               Sign In
             </Button>
             <DialogClose asChild>
-              <Button variant="outline">Close</Button>
+              <Button variant="outline" className="flex-1">
+                Close
+              </Button>
             </DialogClose>
           </DialogFooter>
         </DialogContent>
@@ -161,10 +177,12 @@ export { IdeaFormHooked };
 export function SubmitIdeaForm() {
   return (
     <>
-      <Card className="mb-8">
+      <Card className="mb-8 modern-card">
         <CardHeader>
-          <CardTitle>Submit a new idea</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl font-bold gradient-text">
+            Submit a new idea
+          </CardTitle>
+          <CardDescription className="text-lg">
             Share your suggestion or idea with the community.
           </CardDescription>
         </CardHeader>

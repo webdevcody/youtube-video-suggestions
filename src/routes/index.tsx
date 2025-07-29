@@ -23,19 +23,19 @@ export const Route = createFileRoute("/")({
 
 function IdeasSkeleton() {
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-6">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="border rounded-lg bg-card">
-          <div className="flex flex-row items-center justify-between p-4 border-b">
+        <div key={i} className="modern-card">
+          <div className="flex flex-row items-center justify-between pb-4 border-b border-border/50">
             <div>
-              <Skeleton className="h-6 w-32 mb-2" />
-              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-7 w-40 mb-3" />
+              <Skeleton className="h-4 w-64" />
             </div>
-            <Skeleton className="h-5 w-5 ml-2" />
+            <Skeleton className="h-6 w-6 ml-2" />
           </div>
-          <div className="p-4 flex gap-2 items-center">
-            <Skeleton className="size-6 rounded-full" />
-            <Skeleton className="h-4 w-32" />
+          <div className="pt-4 flex gap-3 items-center">
+            <Skeleton className="size-7 rounded-full" />
+            <Skeleton className="h-4 w-36" />
           </div>
         </div>
       ))}
@@ -106,54 +106,71 @@ function Home() {
   }, [ideas, searchTerm, selectedTags]);
 
   return (
-    <div className="p-4 container mx-auto">
+    <div className="p-6 container mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content Area */}
         <div className="lg:col-span-2">
-          <div className="my-4 flex items-center justify-between mb-4">
-            <h1 className="text-4xl font-bold">Video Suggestions</h1>
+          <div className="my-6 flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-5xl font-bold gradient-text mb-2">
+                Video Suggestions
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Share and discover amazing video ideas for Web Dev Cody
+              </p>
+            </div>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button variant="default">
-                  <Plus className="h-4 w-4" /> Submit Idea
+                <Button className="modern-button">
+                  <Plus className="h-5 w-5 mr-2" /> Submit Idea
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Submit a new idea</DialogTitle>
+                  <DialogTitle className="text-xl font-semibold">
+                    Submit a new idea
+                  </DialogTitle>
                 </DialogHeader>
                 <IdeaFormHooked onSuccess={() => setOpen(false)} />
               </DialogContent>
             </Dialog>
           </div>
 
-          <IdeaFilter
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            selectedTags={selectedTags}
-            onRemoveTag={removeTag}
-            onClearAllTags={clearAllTags}
-          />
+          <div className="mb-6">
+            <IdeaFilter
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              selectedTags={selectedTags}
+              onRemoveTag={removeTag}
+              onClearAllTags={clearAllTags}
+            />
+          </div>
 
           {isLoading && <IdeasSkeleton />}
-          <div className="h-[calc(100vh-200px)] overflow-y-auto">
+          <div className="h-[calc(100vh-280px)] overflow-y-auto pr-2">
             {!filteredIdeas || filteredIdeas.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-6 py-12">
+              <div className="flex flex-col items-center justify-center gap-8 py-16">
                 <div className="text-center">
-                  <h4 className="text-lg font-semibold mb-2">
+                  <h4 className="text-2xl font-semibold mb-4 gradient-text">
                     {searchTerm.trim() || selectedTags.length > 0
                       ? "No matching ideas found"
                       : "No ideas yet"}
                   </h4>
-                  <p className="text-muted-foreground mb-4">
+                  <p className="text-muted-foreground text-lg mb-6 max-w-md">
                     {searchTerm.trim() || selectedTags.length > 0
                       ? "Try adjusting your search terms or filters, or create a new idea."
                       : "Create or upload your first idea suggestion below!"}
                   </p>
+                  <Button
+                    className="modern-button"
+                    onClick={() => setOpen(true)}
+                  >
+                    <Plus className="h-5 w-5 mr-2" /> Create First Idea
+                  </Button>
                 </div>
               </div>
             ) : (
-              <div className="grid gap-4 mb-8 pr-2">
+              <div className="grid gap-6 mb-8">
                 {filteredIdeas.map((idea) => (
                   <IdeaCard
                     key={idea.id}
@@ -169,7 +186,7 @@ function Home() {
 
         {/* Tag Browser Sidebar */}
         <div className="lg:col-span-1">
-          <div className="sticky top-4">
+          <div className="sticky top-6">
             <TagBrowser
               ideas={ideas}
               selectedTags={selectedTags}

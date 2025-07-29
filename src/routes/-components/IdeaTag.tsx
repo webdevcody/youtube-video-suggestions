@@ -44,7 +44,7 @@ export function IdeaTag({
   if (variant === "filter") {
     return (
       <div
-        className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border transition-colors"
+        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm border transition-all duration-200 hover:scale-105 hover:shadow-md"
         style={
           {
             backgroundColor: `${tagColor}15`, // 15% opacity
@@ -55,13 +55,13 @@ export function IdeaTag({
           } as React.CSSProperties & { "--tag-lightness": string }
         }
       >
-        <span>{name}</span>
+        <span className="font-medium">{name}</span>
         {onRemove && (
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onRemove(name)}
-            className="h-4 w-4 p-0 rounded-full hover:bg-current hover:bg-opacity-20"
+            className="h-5 w-5 p-0 rounded-full hover:bg-current hover:bg-opacity-20 transition-all duration-200"
           >
             <X className="h-3 w-3" />
           </Button>
@@ -74,9 +74,9 @@ export function IdeaTag({
     <button
       onClick={() => onClick?.(name)}
       disabled={!onClick}
-      className={`inline-block px-2 py-0.5 rounded-full text-xs border transition-all duration-200 hover:scale-105 ${
+      className={`inline-block px-3 py-1.5 rounded-xl text-sm border transition-all duration-200 hover:scale-105 hover:shadow-md ${
         onClick ? "cursor-pointer" : "cursor-default"
-      } ${isSelected ? "shadow-sm" : "hover:shadow-sm"}`}
+      } ${isSelected ? "shadow-md ring-2 ring-blue-500/20" : "hover:shadow-md"}`}
       style={
         {
           backgroundColor: isSelected
@@ -93,7 +93,7 @@ export function IdeaTag({
         } as React.CSSProperties & { "--tag-lightness": string }
       }
     >
-      {name}
+      <span className="font-medium">{name}</span>
     </button>
   );
 }

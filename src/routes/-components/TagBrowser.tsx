@@ -57,33 +57,40 @@ export function TagBrowser({
 
   if (!ideas || allTags.length === 0) {
     return (
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold mt-4">Browse Tags</h2>
-        <p className="text-sm text-muted-foreground">
-          No tags available yet. Tags will appear here when ideas are created
-          with tags.
-        </p>
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold gradient-text mb-2">Browse Tags</h2>
+          <p className="text-muted-foreground">
+            No tags available yet. Tags will appear here when ideas are created
+            with tags.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-semibold mt-4">Browse Tags</h2>
-      <p className="text-sm text-muted-foreground">
-        Click on tags to filter ideas. Selected tags will be combined.
-      </p>
-      <div className="max-h-96 overflow-y-auto border rounded-lg p-4 bg-muted/30">
-        <div className="flex flex-wrap gap-2">
-          {allTags.map((tag) => (
-            <div key={tag.id} className="flex items-center gap-2 my-1">
-              <IdeaTag
-                name={`${tag.name} (${tag.count})`}
-                isSelected={selectedTags.includes(tag.name)}
-                onClick={() => onTagClick(tag.name)}
-              />
-            </div>
-          ))}
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold gradient-text mb-2">Browse Tags</h2>
+        <p className="text-muted-foreground">
+          Click on tags to filter ideas. Selected tags will be combined.
+        </p>
+      </div>
+
+      <div className="modern-card">
+        <div className="max-h-96 overflow-y-auto">
+          <div className="flex flex-wrap gap-3">
+            {allTags.map((tag) => (
+              <div key={tag.id} className="flex items-center gap-2 my-1">
+                <IdeaTag
+                  name={`${tag.name} (${tag.count})`}
+                  isSelected={selectedTags.includes(tag.name)}
+                  onClick={() => onTagClick(tag.name)}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
