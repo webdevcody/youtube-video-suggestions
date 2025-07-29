@@ -20,4 +20,4 @@ RUN npm run build
 EXPOSE 5173
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["node", ".output/server/index.mjs"]
