@@ -8,17 +8,13 @@ import { openai } from "@ai-sdk/openai";
 import { config } from "~/db/schema";
 import { eq } from "drizzle-orm";
 import { Filter } from "bad-words";
-
-const schema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-});
+import { createIdeaSchema } from "~/lib/schemas";
 
 const CONFIG_ID = "singleton";
 const MAX_OPENAI_TAG_GENERATIONS = 1000;
 
 export const createIdeaFn = createServerFn()
-  .validator(schema)
+  .validator(createIdeaSchema)
   .middleware([isAuthenticated])
   .handler(async ({ data, context }) => {
     // Initialize profanity filter

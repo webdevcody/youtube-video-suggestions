@@ -158,11 +158,11 @@ export function IdeaCard({ idea, onTagClick, selectedTags }: IdeaCardProps) {
         </div>
 
         <div className="p-4 pr-20 border-b">
-          <div className="font-semibold leading-none tracking-tight mb-2">
+          <div className="font-semibold leading-none tracking-tight mb-4 text-2xl">
             {idea.title}
           </div>
           {idea.description && (
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-muted-foreground mb-4">
               {idea.description}
             </div>
           )}

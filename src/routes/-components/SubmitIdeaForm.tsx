@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/card";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import z from "zod";
 import { authClient } from "~/lib/auth-client";
 import {
   Dialog,
@@ -34,19 +33,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createIdeaFn } from "../-actions/createIdeaFn";
 import { Loader2 } from "lucide-react";
-
-const schema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-});
+import {
+  createIdeaSchema,
+  type CreateIdeaFormData,
+  IDEA_LIMITS,
+} from "~/lib/schemas";
 
 function IdeaFormHooked({ onSuccess }: { onSuccess?: () => void } = {}) {
   const queryClient = useQueryClient();
   const { data: session, isPending: sessionLoading } = authClient.useSession();
   const [showLoginDialog, setShowLoginDialog] = React.useState(false);
 
-  const form = useForm<z.infer<typeof schema>>({
-    resolver: zodResolver(schema),
+  const form = useForm<CreateIdeaFormData>({
+    resolver: zodResolver(createIdeaSchema),
     defaultValues: { title: "", description: "" },
   });
 
@@ -62,7 +61,7 @@ function IdeaFormHooked({ onSuccess }: { onSuccess?: () => void } = {}) {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof schema>) => {
+  const onSubmit = (data: CreateIdeaFormData) => {
     if (!session && !sessionLoading) {
       setShowLoginDialog(true);
       return;
@@ -87,9 +86,13 @@ function IdeaFormHooked({ onSuccess }: { onSuccess?: () => void } = {}) {
                   <Input
                     placeholder="Idea title"
                     disabled={isCreating}
+                    maxLength={IDEA_LIMITS.title}
                     {...field}
                   />
                 </FormControl>
+                <div className="text-right text-xs text-muted-foreground">
+                  {field.value?.length || 0}/{IDEA_LIMITS.title}
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -105,9 +108,13 @@ function IdeaFormHooked({ onSuccess }: { onSuccess?: () => void } = {}) {
                     placeholder="Description (optional)"
                     rows={3}
                     disabled={isCreating}
+                    maxLength={IDEA_LIMITS.description}
                     {...field}
                   />
                 </FormControl>
+                <div className="text-right text-xs text-muted-foreground">
+                  {field.value?.length || 0}/{IDEA_LIMITS.description}
+                </div>
                 <FormMessage />
               </FormItem>
             )}
