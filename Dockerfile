@@ -19,5 +19,5 @@ RUN npm run build
 # Expose the port your app runs on (adjust if needed)
 EXPOSE 3000
 
-# Start the application
+# Start the applications
 CMD ["node", ".output/server/index.mjs"]
