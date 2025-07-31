@@ -9,7 +9,6 @@ import { Filter } from "bad-words";
 import { createIdeaSchema } from "~/lib/schemas";
 import { serverEvents } from "~/lib/eventEmitter";
 import OpenAI from "openai";
-import { zodResponseFormat } from "openai/helpers/zod";
 
 const openai = new OpenAI();
 
@@ -42,24 +41,50 @@ async function generateTagsInBackground(
     let tags: string[] = [];
     let usedOpenAI = false;
 
+    console.log("running chat completion");
     try {
-      const tagSchema = z.object({
-        tags: z.array(z.string().min(1).max(32)),
-      });
-
-      const completion = await openai.chat.completions.parse({
+      const completion = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [
-          { role: "system", content: "Extract the tags for the idea." },
+          {
+            role: "system",
+            content:
+              "Extract relevant tags for this idea. Provide 3-5 descriptive tags that categorize the main topics, technologies, or themes. Each tag should be 1-2 words and under 32 characters.",
+          },
           {
             role: "user",
             content: `Title: ${title}\nDescription: ${description ?? ""}`,
           },
         ],
-        response_format: zodResponseFormat(tagSchema, "tagSchema"),
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "tag_extraction",
+            schema: {
+              type: "object",
+              properties: {
+                tags: {
+                  type: "array",
+                  items: {
+                    type: "string",
+                    minLength: 1,
+                    maxLength: 32,
+                  },
+                  minItems: 1,
+                  maxItems: 10,
+                },
+              },
+              required: ["tags"],
+              additionalProperties: false,
+            },
+          },
+        },
       });
 
-      tags = completion.choices[0].message.parsed?.tags ?? [];
+      const result = JSON.parse(
+        completion.choices[0].message.content || '{"tags": []}'
+      );
+      tags = result.tags || [];
 
       usedOpenAI = true;
     } catch (err) {
