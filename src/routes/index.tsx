@@ -3,19 +3,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { IdeaCard } from "./-components/IdeaCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { IdeaFormHooked } from "./-components/SubmitIdeaForm";
+
 import React from "react";
 import { Plus } from "lucide-react";
 import { getIdeasFn } from "./-actions/getIdeasFn";
 import { IdeaFilter } from "./-components/IdeaFilter";
 import { TagBrowser } from "./-components/TagBrowser";
+import SubmitIdeaButton from "./-components/SubmitIdeaButton";
+import IdeaHeader from "./-components/IdeaHeader";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -106,34 +101,13 @@ function Home() {
   }, [ideas, searchTerm, selectedTags]);
 
   return (
-    <div className="p-6 container mx-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="p-4 md:p-6 container mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Main Content Area */}
         <div className="lg:col-span-2">
-          <div className="my-6 flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-5xl font-bold gradient-text mb-2">
-                Video Suggestions
-              </h1>
-              <p className="text-muted-foreground text-lg">
-                Share and discover amazing video ideas for Web Dev Cody
-              </p>
-            </div>
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button className="modern-button">
-                  <Plus className="h-5 w-5 mr-2" /> Submit Idea
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle className="text-xl font-semibold">
-                    Submit a new idea
-                  </DialogTitle>
-                </DialogHeader>
-                <IdeaFormHooked onSuccess={() => setOpen(false)} />
-              </DialogContent>
-            </Dialog>
+          {/* Header Section - Responsive Layout */}
+          <div className="my-4 md:my-6 mb-6">
+            <IdeaHeader />
           </div>
 
           <div className="mb-6">
@@ -147,8 +121,10 @@ function Home() {
           </div>
 
           {isLoading && <IdeasSkeleton />}
-          <div className="h-[calc(100vh-280px)] overflow-y-auto pr-2">
-            {!filteredIdeas || filteredIdeas.length === 0 ? (
+
+          {/* Ideas Container - Responsive Scrolling */}
+          <div className="lg:h-[calc(100vh-280px)] lg:overflow-y-auto lg:pr-2">
+            {!isLoading && (!filteredIdeas || filteredIdeas.length === 0) ? (
               <div className="flex flex-col items-center justify-center gap-8 py-16">
                 <div className="text-center">
                   <h4 className="text-2xl font-semibold mb-4 gradient-text">
@@ -161,12 +137,7 @@ function Home() {
                       ? "Try adjusting your search terms or filters, or create a new idea."
                       : "Create or upload your first idea suggestion below!"}
                   </p>
-                  <Button
-                    className="modern-button"
-                    onClick={() => setOpen(true)}
-                  >
-                    <Plus className="h-5 w-5 mr-2" /> Create First Idea
-                  </Button>
+                  <SubmitIdeaButton text="Create First Idea" />
                 </div>
               </div>
             ) : (
@@ -184,9 +155,9 @@ function Home() {
           </div>
         </div>
 
-        {/* Tag Browser Sidebar */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-6">
+        {/* Tag Browser Sidebar - Hidden on mobile, stacked on tablet */}
+        <div className="lg:col-span-1 order-first lg:order-last">
+          <div className="lg:sticky lg:top-6">
             <TagBrowser
               ideas={ideas}
               selectedTags={selectedTags}

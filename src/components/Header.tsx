@@ -6,10 +6,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "~/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "~/components/ui/sheet";
 import { Session } from "better-auth";
 import { authClient } from "~/lib/auth-client";
 import { Link } from "@tanstack/react-router";
 import { Button } from "./ui/button";
+import { Menu } from "lucide-react";
 
 export function Header({
   isAuthenticated,
@@ -22,33 +24,39 @@ export function Header({
 }) {
   return (
     <div className="border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="items-center container mx-auto px-6 py-4 flex gap-4 text-lg justify-between">
-        <div className="flex items-center gap-8">
-          <Link to="/" className="flex items-center gap-3 group">
+      <div className="items-center container mx-auto px-4 md:px-6 py-4 flex gap-2 md:gap-4 text-lg justify-between">
+        {/* Logo Section */}
+        <div className="flex items-center gap-2 md:gap-8 flex-1 min-w-0">
+          <Link to="/" className="flex items-center gap-2 md:gap-3 group">
             <div className="relative">
               <img
                 src="/wdc.jpg"
                 alt="WDC Feedback"
-                className="h-12 w-12 rounded-xl ring-2 ring-border group-hover:ring-blue-500/50 transition-all duration-300"
+                className="h-10 w-10 md:h-12 md:w-12 rounded-xl ring-2 ring-border group-hover:ring-blue-500/50 transition-all duration-300"
               />
               <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-xl gradient-text">
+            <div className="flex flex-col min-w-0">
+              <span className="font-bold text-lg md:text-xl gradient-text truncate">
                 Web Dev Cody
               </span>
-              <span className="text-sm text-muted-foreground">Video Ideas</span>
+              <span className="text-xs md:text-sm text-muted-foreground hidden sm:block">
+                Video Ideas
+              </span>
             </div>
           </Link>
+
+          {/* Desktop navigation link */}
           <a
             href="https://webdevcody.com"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 px-3 py-1 rounded-lg hover:bg-muted"
+            className="hidden lg:block text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 px-3 py-1 rounded-lg hover:bg-muted"
           >
             webdevcody.com
           </a>
         </div>
 
-        <div className="flex items-center gap-4">
+        {/* Desktop Actions */}
+        <div className="hidden md:flex items-center gap-4">
           {isAuthenticated && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -83,6 +91,64 @@ export function Header({
             </Button>
           )}
           <ModeToggle />
+        </div>
+
+        {/* Mobile Actions */}
+        <div className="flex md:hidden items-center gap-2">
+          <ModeToggle />
+
+          {/* Mobile Menu */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-80">
+              <div className="flex flex-col gap-6 mt-8">
+                <a
+                  href="https://webdevcody.com"
+                  className="text-lg text-muted-foreground hover:text-foreground transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-muted"
+                >
+                  webdevcody.com
+                </a>
+
+                {isAuthenticated && (
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center gap-3 px-3 py-2">
+                      <Avatar className="ring-2 ring-border">
+                        <AvatarImage src={image} />
+                        <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                          {name}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium">{name}</span>
+                    </div>
+                    <Button
+                      onClick={() => authClient.signOut()}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      Sign Out
+                    </Button>
+                  </div>
+                )}
+
+                {!isAuthenticated && (
+                  <Button
+                    onClick={() =>
+                      authClient.signIn.social({
+                        provider: "google",
+                      })
+                    }
+                    className="modern-button w-full"
+                  >
+                    Sign In
+                  </Button>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </div>
