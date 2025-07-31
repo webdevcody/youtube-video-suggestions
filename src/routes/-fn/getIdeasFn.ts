@@ -9,6 +9,13 @@ export const getIdeasFn = createServerFn()
     const ideas = await database.query.idea.findMany({
       with: {
         upvotes: true,
+        user: {
+          columns: {
+            id: true,
+            name: true,
+            image: true,
+          },
+        },
         ideaTags: {
           with: {
             tag: true,
@@ -19,11 +26,13 @@ export const getIdeasFn = createServerFn()
 
     function toIdeaWithDetails(ideas: any[]): IdeaWithDetails[] {
       return ideas.map((idea) => {
-        const { upvotes, ideaTags, ...rest } = idea;
+        const { upvotes, ideaTags, user, ...rest } = idea;
         return {
           ...rest,
           upvoteCount: upvotes.length,
           tags: ideaTags.map((tag: any) => tag.tag),
+          userImage: user.image,
+          userName: user.name,
         };
       });
     }
