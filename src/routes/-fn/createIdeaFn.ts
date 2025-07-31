@@ -48,7 +48,7 @@ async function generateTagsInBackground(
       });
 
       const completion = await openai.chat.completions.parse({
-        model: "gpt-4o-mini",
+        model: "gpt-4o",
         messages: [
           { role: "system", content: "Extract the tags for the idea." },
           {
@@ -56,7 +56,7 @@ async function generateTagsInBackground(
             content: `Title: ${title}\nDescription: ${description ?? ""}`,
           },
         ],
-        response_format: zodResponseFormat(tagSchema, "tags"),
+        response_format: zodResponseFormat(tagSchema, "tagSchema"),
       });
 
       tags = completion.choices[0].message.parsed?.tags ?? [];
