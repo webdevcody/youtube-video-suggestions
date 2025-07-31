@@ -12,7 +12,7 @@ export const ServerRoute = createServerFileRoute("/api/events/$").methods({
 
     const stream = new ReadableStream({
       start(controller) {
-        // Send initial connection message
+        // Send initial connection messages
         const connectMessage = `data: ${JSON.stringify({ type: "connected" })}\n\n`;
         controller.enqueue(new TextEncoder().encode(connectMessage));
 
