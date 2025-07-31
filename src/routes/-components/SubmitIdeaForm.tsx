@@ -5,7 +5,6 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { authClient } from "~/lib/auth-client";
 import {
@@ -19,7 +18,6 @@ import {
 } from "@/components/ui/dialog";
 import React from "react";
 import { Button } from "~/components/ui/button";
-import { toast } from "sonner";
 import {
   Form,
   FormField,
@@ -31,16 +29,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createIdeaFn } from "../-actions/createIdeaFn";
 import { Loader2 } from "lucide-react";
 import {
   createIdeaSchema,
   type CreateIdeaFormData,
   IDEA_LIMITS,
 } from "~/lib/schemas";
+import { useCreateIdea } from "../-hooks/useCreateIdea";
 
 function IdeaFormHooked({ onSuccess }: { onSuccess?: () => void } = {}) {
-  const queryClient = useQueryClient();
   const { data: session, isPending: sessionLoading } = authClient.useSession();
   const [showLoginDialog, setShowLoginDialog] = React.useState(false);
 
@@ -49,15 +46,9 @@ function IdeaFormHooked({ onSuccess }: { onSuccess?: () => void } = {}) {
     defaultValues: { title: "", description: "" },
   });
 
-  const { mutate: createIdea, isPending: isCreating } = useMutation({
-    mutationFn: createIdeaFn,
+  const { mutate: createIdea, isPending: isCreating } = useCreateIdea({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ideas"] });
-      toast.success("Idea created!", {
-        description: "Your idea has been submitted successfully.",
-      });
       form.reset();
-      if (onSuccess) onSuccess();
     },
   });
 
@@ -66,6 +57,7 @@ function IdeaFormHooked({ onSuccess }: { onSuccess?: () => void } = {}) {
       setShowLoginDialog(true);
       return;
     }
+    onSuccess?.();
     createIdea({ data });
   };
 

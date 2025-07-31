@@ -1,5 +1,6 @@
 import { getWebRequest } from "@tanstack/react-start/server";
 import { auth } from "./auth";
+import { isAdminEmail } from "~/lib/config";
 
 export async function isUserAdmin(): Promise<boolean> {
   const request = getWebRequest();
@@ -14,5 +15,5 @@ export async function isUserAdmin(): Promise<boolean> {
     return false;
   }
 
-  return session.user.email === "webdevcody@gmail.com";
+  return isAdminEmail(session.user.email);
 }

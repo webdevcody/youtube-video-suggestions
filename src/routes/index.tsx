@@ -2,15 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { IdeaCard } from "./-components/IdeaCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 
 import React from "react";
-import { Plus } from "lucide-react";
-import { getIdeasFn } from "./-actions/getIdeasFn";
+import { getIdeasFn } from "./-fn/getIdeasFn";
 import { IdeaFilter } from "./-components/IdeaFilter";
 import { TagBrowser } from "./-components/TagBrowser";
 import SubmitIdeaButton from "./-components/SubmitIdeaButton";
 import IdeaHeader from "./-components/IdeaHeader";
+import { useServerEvents } from "~/hooks/useServerEvents";
+import { useGetIdeas } from "./-hooks/useGetIdeas";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -39,14 +39,22 @@ function IdeasSkeleton() {
 }
 
 function Home() {
-  const { data: ideas, isLoading } = useQuery({
-    queryKey: ["ideas"],
-    queryFn: getIdeasFn,
-  });
+  // Set up SSE connection for real-time tag updates
+  useServerEvents();
 
-  const [open, setOpen] = React.useState(false);
+  const { data: ideas, isLoading } = useGetIdeas();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
+
+  const sortedIdeas = React.useMemo(() => {
+    return ideas?.slice().sort((a, b) => {
+      if (b.upvoteCount !== a.upvoteCount) {
+        return b.upvoteCount - a.upvoteCount;
+      }
+      // If upvoteCount is the same, order by title (case-insensitive)
+      return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+    });
+  }, [ideas]);
 
   // Function to toggle tag selection
   const toggleTag = (tagName: string) => {
@@ -69,11 +77,11 @@ function Home() {
 
   // Filter ideas based on search term and selected tags
   const filteredIdeas = React.useMemo(() => {
-    if (!ideas) {
+    if (!sortedIdeas) {
       return [];
     }
 
-    let filtered = ideas;
+    let filtered = sortedIdeas;
 
     // Filter by search term
     if (searchTerm.trim()) {
@@ -90,7 +98,7 @@ function Home() {
     if (selectedTags.length > 0) {
       filtered = filtered.filter((idea) =>
         selectedTags.every((selectedTag) =>
-          idea.tags.some(
+          idea.tags?.some(
             (tag: { id: string; name: string }) => tag.name === selectedTag
           )
         )
@@ -98,7 +106,7 @@ function Home() {
     }
 
     return filtered;
-  }, [ideas, searchTerm, selectedTags]);
+  }, [sortedIdeas, searchTerm, selectedTags]);
 
   return (
     <div className="p-4 md:p-6 container mx-auto">
@@ -158,11 +166,7 @@ function Home() {
         {/* Tag Browser Sidebar - Hidden on mobile, stacked on tablet */}
         <div className="lg:col-span-1 order-first lg:order-last">
           <div className="lg:sticky lg:top-6">
-            <TagBrowser
-              ideas={ideas}
-              selectedTags={selectedTags}
-              onTagClick={toggleTag}
-            />
+            <TagBrowser selectedTags={selectedTags} onTagClick={toggleTag} />
           </div>
         </div>
       </div>

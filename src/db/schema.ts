@@ -6,6 +6,7 @@ import {
   unique,
   index,
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -16,6 +17,17 @@ export const user = pgTable("user", {
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
 });
+
+export const userRelations = relations(user, ({ one, many }) => ({
+  // One-to-many: user has many ideas
+  ideas: many(idea),
+  // One-to-many: user has many upvotes
+  upvotes: many(upvote),
+  // One-to-many: user has many sessions
+  sessions: many(session),
+  // One-to-many: user has many accounts
+  accounts: many(account),
+}));
 
 export const session = pgTable("session", {
   id: text("id").primaryKey(),
@@ -29,6 +41,14 @@ export const session = pgTable("session", {
     .notNull()
     .references(() => user.id),
 });
+
+export const sessionRelations = relations(session, ({ one }) => ({
+  // Many-to-one: session belongs to one user
+  user: one(user, {
+    fields: [session.userId],
+    references: [user.id],
+  }),
+}));
 
 export const account = pgTable("account", {
   id: text("id").primaryKey(),
@@ -47,6 +67,14 @@ export const account = pgTable("account", {
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
 });
+
+export const accountRelations = relations(account, ({ one }) => ({
+  // Many-to-one: account belongs to one user
+  user: one(user, {
+    fields: [account.userId],
+    references: [user.id],
+  }),
+}));
 
 export const verification = pgTable("verification", {
   id: text("id").primaryKey(),
@@ -72,6 +100,18 @@ export const idea = pgTable(
   (table) => [index("idx_idea_user_id").on(table.userId)]
 );
 
+export const ideaRelations = relations(idea, ({ one, many }) => ({
+  // Many-to-one: idea belongs to one user
+  user: one(user, {
+    fields: [idea.userId],
+    references: [user.id],
+  }),
+  // One-to-many: idea has many upvotes
+  upvotes: many(upvote),
+  // One-to-many: idea has many ideaTags (junction table)
+  ideaTags: many(ideaTag),
+}));
+
 export const upvote = pgTable(
   "upvote",
   {
@@ -92,12 +132,30 @@ export const upvote = pgTable(
   ]
 );
 
+export const upvoteRelations = relations(upvote, ({ one }) => ({
+  // Many-to-one: upvote belongs to one user
+  user: one(user, {
+    fields: [upvote.userId],
+    references: [user.id],
+  }),
+  // Many-to-one: upvote belongs to one idea
+  idea: one(idea, {
+    fields: [upvote.ideaId],
+    references: [idea.id],
+  }),
+}));
+
 export const tag = pgTable("tag", {
   id: text("id").primaryKey(),
   name: text("name").notNull().unique(),
   createdAt: timestamp("created_at"),
   updatedAt: timestamp("updated_at"),
 });
+
+export const tagRelations = relations(tag, ({ many }) => ({
+  // One-to-many: tag has many ideaTags (junction table)
+  ideaTags: many(ideaTag),
+}));
 
 export const ideaTag = pgTable(
   "idea_tag",
@@ -119,9 +177,32 @@ export const ideaTag = pgTable(
   ]
 );
 
+export const ideaTagRelations = relations(ideaTag, ({ one }) => ({
+  // Many-to-one: ideaTag belongs to one idea
+  idea: one(idea, {
+    fields: [ideaTag.ideaId],
+    references: [idea.id],
+  }),
+  // Many-to-one: ideaTag belongs to one tag
+  tag: one(tag, {
+    fields: [ideaTag.tagId],
+    references: [tag.id],
+  }),
+}));
+
 export const config = pgTable("config", {
   id: text("id").primaryKey(), // always 'singleton' or similar
   openaiTagGenerations: text("openai_tag_generations").notNull(), // store as string for compatibility, parse as int
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
 });
+
+export type Idea = typeof idea.$inferSelect;
+export type IdeaTag = typeof ideaTag.$inferSelect;
+export type Tag = typeof tag.$inferSelect;
+export type User = typeof user.$inferSelect;
+export type Session = typeof session.$inferSelect;
+export type Account = typeof account.$inferSelect;
+export type Verification = typeof verification.$inferSelect;
+export type Upvote = typeof upvote.$inferSelect;
+export type Config = typeof config.$inferSelect;

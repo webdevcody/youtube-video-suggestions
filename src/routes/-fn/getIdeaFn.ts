@@ -1,27 +1,26 @@
 import { createServerFn } from "@tanstack/react-start";
-import { eq, and, sql } from "drizzle-orm";
-import { idea, user, upvote, ideaTag, tag } from "~/db/schema";
 import { database } from "~/db";
+import { sql } from "drizzle-orm";
 import { optionalAuthentication } from "~/utils/middleware";
+import z from "zod";
+import { Idea } from "~/db/schema";
 
-// Define the return type for the optimized query
-type IdeaWithDetails = {
-  id: string;
-  title: string;
-  description: string;
-  createdAt: string;
-  updatedAt: string;
-  userId: string;
-  userImage: string | null;
-  userName: string | null;
+export type IdeaWithDetails = Idea & {
   upvoteId: string | null;
   upvoteCount: number;
-  tags: Array<{ id: string; name: string }>;
+  userName: string | null;
+  userImage: string | null;
+  tags: Array<{ id: string; name: string }> | null;
 };
 
-export const getIdeasFn = createServerFn()
+const getIdeaSchema = z.object({
+  ideaId: z.string(),
+});
+
+export const getIdeaFn = createServerFn()
+  .validator(getIdeaSchema)
   .middleware([optionalAuthentication])
-  .handler(async ({ context }): Promise<IdeaWithDetails[]> => {
+  .handler(async ({ data, context }): Promise<IdeaWithDetails | null> => {
     const currentUserId = context?.userId;
 
     const ideas = await database.execute(sql`
@@ -30,6 +29,7 @@ export const getIdeasFn = createServerFn()
           idea_id,
           COUNT(*) as upvote_count
         FROM upvote 
+        WHERE idea_id = ${data.ideaId}
         GROUP BY idea_id
       ),
       user_upvotes AS (
@@ -37,7 +37,7 @@ export const getIdeasFn = createServerFn()
           idea_id,
           id as upvote_id
         FROM upvote 
-        WHERE user_id = ${currentUserId ?? ""}
+        WHERE user_id = ${currentUserId ?? ""} AND idea_id = ${data.ideaId}
       ),
       idea_tags_agg AS (
         SELECT 
@@ -50,6 +50,7 @@ export const getIdeasFn = createServerFn()
           ) as tags
         FROM idea_tag it
         LEFT JOIN tag t ON it.tag_id = t.id
+        WHERE it.idea_id = ${data.ideaId}
         GROUP BY it.idea_id
       )
       SELECT 
@@ -69,8 +70,17 @@ export const getIdeasFn = createServerFn()
       LEFT JOIN idea_upvote_counts iuc ON i.id = iuc.idea_id
       LEFT JOIN user_upvotes uu ON i.id = uu.idea_id
       LEFT JOIN idea_tags_agg ita ON i.id = ita.idea_id
-      ORDER BY COALESCE(iuc.upvote_count, 0) DESC
+      WHERE i.id = ${data.ideaId}
     `);
 
-    return ideas.rows as IdeaWithDetails[];
+    const idea = ideas.rows[0] as IdeaWithDetails | undefined;
+
+    if (!idea) {
+      return null;
+    }
+
+    idea.createdAt = idea.createdAt ? new Date(idea.createdAt) : null;
+    idea.updatedAt = idea.updatedAt ? new Date(idea.updatedAt) : null;
+
+    return idea;
   });
