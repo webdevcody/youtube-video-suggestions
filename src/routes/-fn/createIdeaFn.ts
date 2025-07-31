@@ -3,13 +3,15 @@ import z from "zod";
 import { database } from "~/db";
 import { idea, tag, ideaTag } from "~/db/schema";
 import { isAuthenticated } from "~/utils/middleware";
-import { generateObject } from "ai";
-import { openai } from "@ai-sdk/openai";
 import { config } from "~/db/schema";
 import { eq } from "drizzle-orm";
 import { Filter } from "bad-words";
 import { createIdeaSchema } from "~/lib/schemas";
 import { serverEvents } from "~/lib/eventEmitter";
+import OpenAI from "openai";
+import { zodResponseFormat } from "openai/helpers/zod";
+
+const openai = new OpenAI();
 
 const CONFIG_ID = "singleton";
 const MAX_OPENAI_TAG_GENERATIONS = 1000;
@@ -41,20 +43,24 @@ async function generateTagsInBackground(
     let usedOpenAI = false;
 
     try {
-      const prompt = `Extract 3-7 short, relevant tags (single words or short phrases, no # or @) for the following idea. Return a JSON object with a 'tags' array.\n\nTitle: ${title}\nDescription: ${description ?? ""}`;
       const tagSchema = z.object({
-        tags: z.array(z.string().min(1).max(32)).min(3).max(7),
+        tags: z.array(z.string().min(1).max(32)),
       });
-      type TagResult = { tags: string[] };
-      const result = await generateObject<TagResult>({
-        model: openai("gpt-4o-mini"),
-        schema: tagSchema,
-        prompt,
+
+      const completion = await openai.chat.completions.parse({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "Extract the tags for the idea." },
+          {
+            role: "user",
+            content: `Title: ${title}\nDescription: ${description ?? ""}`,
+          },
+        ],
+        response_format: zodResponseFormat(tagSchema, "tags"),
       });
-      tags =
-        result.object && Array.isArray(result.object.tags)
-          ? result.object.tags.map((tag) => tag.trim().toLowerCase())
-          : [];
+
+      tags = completion.choices[0].message.parsed?.tags ?? [];
+
       usedOpenAI = true;
     } catch (err) {
       console.error("Error generating tags with OpenAI:", err);
