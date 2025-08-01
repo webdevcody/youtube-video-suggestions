@@ -1,0 +1,1 @@
+ALTER TABLE "idea" ADD COLUMN "youtube_url" text;

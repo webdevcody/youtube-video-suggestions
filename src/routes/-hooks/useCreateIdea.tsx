@@ -3,20 +3,26 @@ import { createIdeaFn } from "../-fn/createIdeaFn";
 import { IdeaWithDetails } from "../-fn/getIdeaFn";
 import { toast } from "sonner";
 import { authClient } from "~/lib/auth-client";
+import { useSession } from "~/lib/sessionContext";
 
 export function useCreateIdea({ onSuccess }: { onSuccess?: () => void } = {}) {
   const queryClient = useQueryClient();
   const { data: session } = authClient.useSession();
+  const { sessionId } = useSession();
 
   return useMutation({
-    mutationFn: createIdeaFn,
+    mutationFn: (variables: Parameters<typeof createIdeaFn>[0]) => 
+      createIdeaFn({ 
+        ...variables, 
+        data: { ...variables.data, sessionId } 
+      }),
     onMutate: async (variables) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["ideas"] });
 
-      // Snapshot the previous value
-      const previousIdeas = queryClient.getQueryData<IdeaWithDetails[]>([
-        "ideas",
+      // Snapshot the previous value for fresh ideas
+      const previousFreshIdeas = queryClient.getQueryData<IdeaWithDetails[]>([
+        "ideas", false
       ]);
 
       // Create optimistic idea
@@ -24,6 +30,8 @@ export function useCreateIdea({ onSuccess }: { onSuccess?: () => void } = {}) {
         id: crypto.randomUUID(),
         title: variables.data.title,
         description: variables.data.description || "",
+        published: false,
+        youtubeUrl: null,
         createdAt: new Date(),
         updatedAt: new Date(),
         userId: session?.user?.id || "",
@@ -34,19 +42,19 @@ export function useCreateIdea({ onSuccess }: { onSuccess?: () => void } = {}) {
         tags: [],
       };
 
-      // Optimistically update to the new value
-      queryClient.setQueryData<IdeaWithDetails[]>(["ideas"], (old) => {
+      // Optimistically update fresh ideas list
+      queryClient.setQueryData<IdeaWithDetails[]>(["ideas", false], (old) => {
         if (!old) return [optimisticIdea];
         return [optimisticIdea, ...old];
       });
 
       // Return a context object with the snapshotted value
-      return { previousIdeas, optimisticIdea };
+      return { previousFreshIdeas, optimisticIdea };
     },
     onError: (err, variables, context) => {
       // If the mutation fails, use the context returned from onMutate to roll back
-      if (context?.previousIdeas) {
-        queryClient.setQueryData(["ideas"], context.previousIdeas);
+      if (context?.previousFreshIdeas) {
+        queryClient.setQueryData(["ideas", false], context.previousFreshIdeas);
       }
       toast.error("Failed to create idea", {
         description: "Please try again.",

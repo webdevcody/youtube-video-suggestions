@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import z from "zod";
 import { database } from "~/db";
 import { idea, tag, ideaTag } from "~/db/schema";
 import { isAuthenticated } from "~/utils/middleware";
@@ -9,6 +8,7 @@ import { Filter } from "bad-words";
 import { createIdeaSchema } from "~/lib/schemas";
 import { serverEvents } from "~/lib/eventEmitter";
 import OpenAI from "openai";
+import { z } from "zod";
 
 const openai = new OpenAI();
 
@@ -169,7 +169,7 @@ async function generateTagsInBackground(
 }
 
 export const createIdeaFn = createServerFn()
-  .validator(createIdeaSchema)
+  .validator(createIdeaSchema.extend({ sessionId: z.string().optional() }))
   .middleware([isAuthenticated])
   .handler(async ({ data, context }) => {
     // Initialize profanity filter
@@ -190,6 +190,14 @@ export const createIdeaFn = createServerFn()
       updatedAt: new Date(),
     };
     await database.insert(idea).values(newIdea);
+
+    // Emit event to notify all users that a new idea was created
+    serverEvents.emit("idea-created", {
+      type: "idea-created",
+      ideaId: newIdea.id,
+      userId: context.userId as string,
+      sessionId: data.sessionId || "",
+    });
 
     // Generate tags in the background without waiting
     generateTagsInBackground(

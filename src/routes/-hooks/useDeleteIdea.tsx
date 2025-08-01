@@ -2,12 +2,18 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteIdeaFn } from "../-fn/deleteIdeaFn";
 import { IdeaWithDetails } from "../-fn/getIdeaFn";
 import { toast } from "sonner";
+import { useSession } from "~/lib/sessionContext";
 
 export function useDeleteIdea({ onSuccess }: { onSuccess?: () => void } = {}) {
   const queryClient = useQueryClient();
+  const { sessionId } = useSession();
 
   return useMutation({
-    mutationFn: deleteIdeaFn,
+    mutationFn: (variables: Parameters<typeof deleteIdeaFn>[0]) => 
+      deleteIdeaFn({ 
+        ...variables, 
+        data: { ...variables.data, sessionId } 
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ideas"] });
       queryClient.invalidateQueries({ queryKey: ["tags"] });

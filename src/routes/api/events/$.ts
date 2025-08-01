@@ -3,12 +3,6 @@ import { serverEvents, type ServerEvent } from "~/lib/eventEmitter";
 
 export const ServerRoute = createServerFileRoute("/api/events/$").methods({
   GET: ({ request }) => {
-    const url = new URL(request.url);
-    const userId = url.searchParams.get("userId");
-
-    if (!userId) {
-      return new Response("Missing userId parameter", { status: 400 });
-    }
 
     const stream = new ReadableStream({
       start(controller) {
@@ -16,19 +10,19 @@ export const ServerRoute = createServerFileRoute("/api/events/$").methods({
         const connectMessage = `data: ${JSON.stringify({ type: "connected" })}\n\n`;
         controller.enqueue(new TextEncoder().encode(connectMessage));
 
-        // Listen for events for this specific user
+        // Listen for events and broadcast to all connections
         const handleEvent = (event: ServerEvent) => {
-          if (event.userId === userId) {
-            const message = `data: ${JSON.stringify(event)}\n\n`;
-            try {
-              controller.enqueue(new TextEncoder().encode(message));
-            } catch (error) {
-              console.error("Error sending SSE message:", error);
-            }
+          const message = `data: ${JSON.stringify(event)}\n\n`;
+          try {
+            controller.enqueue(new TextEncoder().encode(message));
+          } catch (error) {
+            console.error("Error sending SSE message:", error);
           }
         };
 
         serverEvents.on("tags-generated", handleEvent);
+        serverEvents.on("idea-created", handleEvent);
+        serverEvents.on("idea-deleted", handleEvent);
 
         // Keep alive ping every 30 seconds
         const pingInterval = setInterval(() => {
@@ -44,6 +38,8 @@ export const ServerRoute = createServerFileRoute("/api/events/$").methods({
         // Cleanup on disconnect
         const cleanup = () => {
           serverEvents.off("tags-generated", handleEvent);
+          serverEvents.off("idea-created", handleEvent);
+          serverEvents.off("idea-deleted", handleEvent);
           clearInterval(pingInterval);
           try {
             controller.close();

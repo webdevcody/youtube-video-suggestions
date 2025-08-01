@@ -4,7 +4,7 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "npm run docker:up && vite dev",
+    "dev": "npm run db:up && vite dev",
     "build": "vite build && tsc --noEmit",
     "start": "vite start",
     "db:push": "drizzle-kit push --config=drizzle.config.ts",
@@ -14,8 +14,8 @@
     "db:reset": "tsx ./src/db/clear.ts && tsx ./src/db/migrate.ts && tsx ./src/db/seed.ts",
     "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
     "db:studio": "drizzle-kit studio",
-    "docker:up": "docker compose up -d",
-    "docker:down": "docker compose down"
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.3.23",

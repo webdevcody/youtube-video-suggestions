@@ -1,4 +1,4 @@
-import { Trash2 } from "lucide-react";
+import { Trash2, CheckCircle, Circle, ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { authClient } from "~/lib/auth-client";
@@ -9,6 +9,8 @@ import { isAdminEmail } from "~/lib/config";
 import { DeleteIdeaButton } from "./DeleteIdeaButton";
 import { useIdea } from "../-hooks/useIdea";
 import { UpvoteButton } from "./UpvoteButton";
+import { useUpdateIdeaStatus } from "../-hooks/useUpdateIdeaStatus";
+import { PublishIdeaDialog } from "./PublishIdeaDialog";
 
 interface IdeaCardProps {
   idea: IdeaWithDetails;
@@ -42,16 +44,56 @@ export function IdeaCard({ idea, onTagClick, selectedTags }: IdeaCardProps) {
     title: string;
   }>(null);
 
+  // Track publish dialog state
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
+
+  // Hook for updating idea status
+  const updateIdeaStatusMutation = useUpdateIdeaStatus();
+
+  const handleTogglePublished = () => {
+    setShowPublishDialog(true);
+  };
+
   return (
     <>
       <DeleteIdeaButton
         deleteTarget={deleteTarget}
         setDeleteTarget={setDeleteTarget}
       />
+      <PublishIdeaDialog
+        isOpen={showPublishDialog}
+        onClose={() => setShowPublishDialog(false)}
+        ideaId={ideaData.id}
+        ideaTitle={ideaData.title}
+        currentPublishedState={ideaData.published}
+      />
       <div className="relative modern-card group">
         {/* Absolutely positioned action buttons in top right */}
         <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
           <UpvoteButton ideaData={ideaData} currentUserId={currentUserId} />
+
+          {isAdmin && (
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label={
+                ideaData.published ? "Mark as fresh" : "Mark as published"
+              }
+              onClick={handleTogglePublished}
+              disabled={updateIdeaStatusMutation.isPending}
+              className={`transition-all duration-200 ${
+                ideaData.published
+                  ? "hover:bg-orange-500/10 hover:text-orange-500 text-orange-600"
+                  : "hover:bg-green-500/10 hover:text-green-500"
+              }`}
+            >
+              {ideaData.published ? (
+                <Circle className="w-5 h-5" />
+              ) : (
+                <CheckCircle className="w-5 h-5" />
+              )}
+            </Button>
+          )}
 
           {(ideaData.userId === currentUserId || isAdmin) && (
             <Button
@@ -115,12 +157,31 @@ export function IdeaCard({ idea, onTagClick, selectedTags }: IdeaCardProps) {
               Generating tags...
             </div>
           )}
+
+          {ideaData.published && ideaData.youtubeUrl && (
+            <div className="my-4 p-3 bg-muted/50 rounded-lg border border-border/50">
+              <div className="flex items-center gap-2">
+                <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground">
+                  Video Published:
+                </span>
+                <a
+                  href={ideaData.youtubeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm bg-gradient-to-r from-gradient-primary to-gradient-secondary bg-clip-text text-transparent hover:from-gradient-primary-hover hover:to-gradient-secondary-hover transition-all duration-300 truncate font-medium"
+                >
+                  Watch on YouTube
+                </a>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-3 pt-4 border-t border-border/50">
           <Avatar className="size-8 ring-2 ring-border">
             <AvatarImage src={ideaData?.userImage ?? undefined} />
-            <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm">
+            <AvatarFallback className="bg-gradient-to-r from-gradient-primary to-gradient-secondary text-white text-sm">
               {ideaData?.userName?.charAt(0) || "U"}
             </AvatarFallback>
           </Avatar>

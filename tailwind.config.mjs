@@ -50,7 +50,15 @@ export default {
     				'3': 'hsl(var(--chart-3))',
     				'4': 'hsl(var(--chart-4))',
     				'5': 'hsl(var(--chart-5))'
-    			}
+    			},
+    			'gradient-primary': 'hsl(var(--gradient-primary))',
+    			'gradient-secondary': 'hsl(var(--gradient-secondary))',
+    			'gradient-primary-hover': 'hsl(var(--gradient-primary-hover))',
+    			'gradient-secondary-hover': 'hsl(var(--gradient-secondary-hover))',
+    			'gradient-primary-light': 'hsl(var(--gradient-primary-light))',
+    			'gradient-secondary-light': 'hsl(var(--gradient-secondary-light))',
+    			'gradient-primary-subtle': 'hsl(var(--gradient-primary-subtle))',
+    			'gradient-secondary-subtle': 'hsl(var(--gradient-secondary-subtle))'
     		}
     	}
     }

@@ -1,20 +1,51 @@
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { IdeaCard } from "./-components/IdeaCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import React from "react";
-import { getIdeasFn } from "./-fn/getIdeasFn";
 import { IdeaFilter } from "./-components/IdeaFilter";
 import { TagBrowser } from "./-components/TagBrowser";
 import SubmitIdeaButton from "./-components/SubmitIdeaButton";
 import IdeaHeader from "./-components/IdeaHeader";
-import { useServerEvents } from "~/hooks/useServerEvents";
+import {
+  useServerEvents,
+  subscribeToNewIdeas,
+  getNewIdeasAvailable,
+  clearNewIdeasAvailable,
+} from "~/hooks/useServerEvents";
 import { useGetIdeas } from "./-hooks/useGetIdeas";
+import { IdeaStatusToggle } from "./-components/IdeaStatusToggle";
+import { useGetIdeaCounts } from "./-hooks/useGetIdeaCounts";
+import { Button } from "@/components/ui/button";
+import { ArrowDown, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: Home,
 });
+
+// Custom hook to manage new ideas notification state
+function useNewIdeasNotification() {
+  const [hasNewIdeas, setHasNewIdeas] = React.useState(false);
+
+  React.useEffect(() => {
+    // Check initial state
+    setHasNewIdeas(getNewIdeasAvailable());
+
+    // Subscribe to new ideas events
+    const unsubscribe = subscribeToNewIdeas(() => {
+      setHasNewIdeas(true);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const clearNotification = React.useCallback(() => {
+    clearNewIdeasAvailable();
+    setHasNewIdeas(false);
+  }, []);
+
+  return { hasNewIdeas, clearNotification };
+}
 
 function IdeasSkeleton() {
   return (
@@ -42,9 +73,12 @@ function Home() {
   // Set up SSE connection for real-time tag updates
   useServerEvents();
 
-  const { data: ideas, isLoading } = useGetIdeas();
+  const [showPublished, setShowPublished] = React.useState(false);
+  const { data: ideas, isLoading, refetch } = useGetIdeas(showPublished);
+  const { freshCount, publishedCount } = useGetIdeaCounts();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
+  const { hasNewIdeas, clearNotification } = useNewIdeasNotification();
 
   const sortedIdeas = React.useMemo(() => {
     return ideas?.slice().sort((a, b) => {
@@ -74,6 +108,12 @@ function Home() {
   const clearAllTags = () => {
     setSelectedTags([]);
   };
+
+  // Function to manually refresh ideas
+  const handleRefreshIdeas = React.useCallback(async () => {
+    clearNotification();
+    await refetch();
+  }, [clearNotification, refetch]);
 
   // Filter ideas based on search term and selected tags
   const filteredIdeas = React.useMemo(() => {
@@ -118,13 +158,36 @@ function Home() {
             <IdeaHeader />
           </div>
 
-          <div className="mb-6">
+          <div className="mb-6 space-y-4">
+            <IdeaStatusToggle
+              showPublished={showPublished}
+              onToggle={setShowPublished}
+              freshCount={freshCount}
+              publishedCount={publishedCount}
+            />
+
+            {hasNewIdeas && (
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gradient-primary-subtle/10 to-gradient-secondary-subtle/10 border border-gradient-secondary/20 dark:border-gradient-secondary/20 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="h-2 w-2 bg-gradient-to-r from-gradient-primary to-gradient-secondary rounded-full animate-pulse" />
+                  <p className="text-sm font-medium gradient-text">
+                    More ideas are available!
+                  </p>
+                </div>
+                <Button onClick={handleRefreshIdeas} size="sm">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Load More
+                </Button>
+              </div>
+            )}
+
             <IdeaFilter
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
               selectedTags={selectedTags}
               onRemoveTag={removeTag}
               onClearAllTags={clearAllTags}
+              searchResultCount={filteredIdeas.length}
             />
           </div>
 

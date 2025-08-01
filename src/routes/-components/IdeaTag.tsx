@@ -61,7 +61,7 @@ export function IdeaTag({
             variant="ghost"
             size="sm"
             onClick={() => onRemove(name)}
-            className="h-5 w-5 p-0 rounded-full hover:bg-current hover:bg-opacity-20 transition-all duration-200"
+            className="h-5 w-5 p-0 rounded-full hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-all duration-200"
           >
             <X className="h-3 w-3" />
           </Button>

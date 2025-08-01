@@ -7,11 +7,10 @@ import {
   DropdownMenuItem,
 } from "~/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "~/components/ui/sheet";
-import { Session } from "better-auth";
 import { authClient } from "~/lib/auth-client";
 import { Link } from "@tanstack/react-router";
 import { Button } from "./ui/button";
-import { Menu } from "lucide-react";
+import { Menu, Github } from "lucide-react";
 
 export function Header({
   isAuthenticated,
@@ -34,7 +33,7 @@ export function Header({
                 alt="WDC Feedback"
                 className="h-10 w-10 md:h-12 md:w-12 rounded-xl ring-2 ring-border group-hover:ring-blue-500/50 transition-all duration-300"
               />
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-gradient-primary-subtle/20 to-gradient-secondary-subtle/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
             <div className="flex flex-col min-w-0">
               <span className="font-bold text-lg md:text-xl gradient-text truncate">
@@ -46,13 +45,22 @@ export function Header({
             </div>
           </Link>
 
-          {/* Desktop navigation link */}
-          <a
-            href="https://webdevcody.com"
-            className="hidden lg:block text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 px-3 py-1 rounded-lg hover:bg-muted"
-          >
-            webdevcody.com
-          </a>
+          {/* Desktop navigation links */}
+          <div className="hidden lg:flex items-center gap-2">
+            <Button variant="ghost" size="sm" asChild>
+              <a href="https://webdevcody.com">webdevcody.com</a>
+            </Button>
+            <Button variant="ghost" size="icon" asChild>
+              <a
+                href="https://github.com/webdevcody/youtube-video-suggestions"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="View source on GitHub"
+              >
+                <Github className="h-4 w-4" />
+              </a>
+            </Button>
+          </div>
         </div>
 
         {/* Desktop Actions */}
@@ -62,7 +70,7 @@ export function Header({
               <DropdownMenuTrigger asChild>
                 <Avatar className="ring-2 ring-border hover:ring-blue-500/50 transition-all duration-300 cursor-pointer">
                   <AvatarImage src={image} />
-                  <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                  <AvatarFallback className="bg-gradient-to-r from-gradient-primary to-gradient-secondary text-white">
                     {name}
                   </AvatarFallback>
                 </Avatar>
@@ -106,19 +114,34 @@ export function Header({
             </SheetTrigger>
             <SheetContent side="right" className="w-80">
               <div className="flex flex-col gap-6 mt-8">
-                <a
-                  href="https://webdevcody.com"
-                  className="text-lg text-muted-foreground hover:text-foreground transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-muted"
+                <Button
+                  variant="ghost"
+                  className="justify-start h-auto text-lg px-3 py-2"
+                  asChild
                 >
-                  webdevcody.com
-                </a>
+                  <a href="https://webdevcody.com">webdevcody.com</a>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="justify-start h-auto text-lg px-3 py-2"
+                  asChild
+                >
+                  <a
+                    href="https://github.com/webdevcody/youtube-video-suggestions"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Github className="h-5 w-5" />
+                    View on GitHub
+                  </a>
+                </Button>
 
                 {isAuthenticated && (
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center gap-3 px-3 py-2">
                       <Avatar className="ring-2 ring-border">
                         <AvatarImage src={image} />
-                        <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                        <AvatarFallback className="bg-gradient-to-r from-gradient-primary to-gradient-secondary text-white">
                           {name}
                         </AvatarFallback>
                       </Avatar>

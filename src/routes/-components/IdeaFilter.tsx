@@ -9,6 +9,7 @@ interface IdeaFilterProps {
   selectedTags: string[];
   onRemoveTag: (tagName: string) => void;
   onClearAllTags: () => void;
+  searchResultCount?: number;
 }
 
 export function IdeaFilter({
@@ -17,6 +18,7 @@ export function IdeaFilter({
   selectedTags,
   onRemoveTag,
   onClearAllTags,
+  searchResultCount,
 }: IdeaFilterProps) {
   return (
     <div className="mb-8">
@@ -26,9 +28,27 @@ export function IdeaFilter({
           placeholder="Search ideas by title or description..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-12 h-12 text-base rounded-xl border-border/50 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all duration-200"
+          className="pl-12 pr-12 h-12 text-base rounded-xl border-border/50 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all duration-200"
         />
+        {searchTerm && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onSearchChange("")}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-muted/50 transition-all duration-200"
+          >
+            <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+          </Button>
+        )}
       </div>
+
+      {searchTerm.trim() && searchResultCount !== undefined && (
+        <div className="mt-3 px-2">
+          <span className="text-sm text-muted-foreground">
+            {searchResultCount} {searchResultCount === 1 ? 'idea' : 'ideas'} matching your search
+          </span>
+        </div>
+      )}
 
       {selectedTags.length > 0 && (
         <div className="mt-6 p-4 rounded-xl bg-muted/30 border border-border/50">

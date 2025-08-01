@@ -5,9 +5,10 @@ import { database } from "~/db";
 import { idea } from "~/db/schema";
 import { isUserAdmin } from "~/utils/isUserAdmin";
 import { isAuthenticated } from "~/utils/middleware";
+import { serverEvents } from "~/lib/eventEmitter";
 
 export const deleteIdeaFn = createServerFn()
-  .validator(z.object({ id: z.string() }))
+  .validator(z.object({ id: z.string(), sessionId: z.string().optional() }))
   .middleware([isAuthenticated])
   .handler(async ({ data, context }) => {
     const isAdmin = await isUserAdmin();
@@ -26,5 +27,14 @@ export const deleteIdeaFn = createServerFn()
     }
 
     await database.delete(idea).where(eq(idea.id, data.id));
+
+    // Emit event to notify all users that an idea was deleted
+    serverEvents.emit("idea-deleted", {
+      type: "idea-deleted",
+      ideaId: data.id,
+      userId: context.userId as string,
+      sessionId: data.sessionId || "",
+    });
+
     return { id: data.id };
   });

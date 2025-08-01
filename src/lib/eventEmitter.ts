@@ -9,4 +9,18 @@ export type TagsGeneratedEvent = {
   tags: Array<{ id: string; name: string }>;
 };
 
-export type ServerEvent = TagsGeneratedEvent;
+export type IdeaCreatedEvent = {
+  type: "idea-created";
+  ideaId: string;
+  userId: string;
+  sessionId: string;
+};
+
+export type IdeaDeletedEvent = {
+  type: "idea-deleted";
+  ideaId: string;
+  userId: string;
+  sessionId: string;
+};
+
+export type ServerEvent = TagsGeneratedEvent | IdeaCreatedEvent | IdeaDeletedEvent;

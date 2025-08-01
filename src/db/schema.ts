@@ -94,6 +94,8 @@ export const idea = pgTable(
       .references(() => user.id),
     title: text("title").notNull(),
     description: text("description"),
+    published: boolean("published").notNull().default(false),
+    youtubeUrl: text("youtube_url"),
     createdAt: timestamp("created_at"),
     updatedAt: timestamp("updated_at"),
   },

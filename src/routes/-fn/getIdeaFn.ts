@@ -57,6 +57,8 @@ export const getIdeaFn = createServerFn()
         i.id,
         i.title,
         i.description,
+        i.published,
+        i.youtube_url as "youtubeUrl",
         i.created_at as "createdAt",
         i.updated_at as "updatedAt",
         i.user_id as "userId",

@@ -18,6 +18,7 @@ import { ThemeProvider } from "~/components/ThemeProvider";
 import { Header } from "~/components/Header";
 import { Footer } from "~/components/Footer";
 import { Toaster } from "sonner";
+import { SessionProvider } from "~/lib/sessionContext";
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -135,17 +136,19 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="min-h-screen">
         <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-          <Toaster />
-          <Header
-            isAuthenticated={!!session}
-            image={session?.user.image ?? ""}
-            name={session?.user.name ?? ""}
-          />
-          {children}
-          <Footer />
-          <TanStackRouterDevtools position="bottom-right" />
-          <ReactQueryDevtools buttonPosition="bottom-left" />
-          <Scripts />
+          <SessionProvider>
+            <Toaster />
+            <Header
+              isAuthenticated={!!session}
+              image={session?.user.image ?? ""}
+              name={session?.user.name ?? ""}
+            />
+            {children}
+            <Footer />
+            <TanStackRouterDevtools position="bottom-right" />
+            <ReactQueryDevtools buttonPosition="bottom-left" />
+            <Scripts />
+          </SessionProvider>
         </ThemeProvider>
       </body>
     </html>

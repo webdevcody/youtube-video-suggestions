@@ -6,5 +6,6 @@ export function useIdea({ ideaData }: { ideaData: IdeaWithDetails }) {
     queryKey: ["idea", ideaData.id],
     queryFn: () => getIdeaFn({ data: { ideaId: ideaData.id } }),
     enabled: false,
+    refetchOnWindowFocus: false,
   });
 }
