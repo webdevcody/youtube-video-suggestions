@@ -22,7 +22,7 @@ export function Header({
   name: string;
 }) {
   return (
-    <div className="border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="border-b border-border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/95">
       <div className="items-center container mx-auto px-4 md:px-6 py-4 flex gap-2 md:gap-4 text-lg justify-between">
         {/* Logo Section */}
         <div className="flex items-center gap-2 md:gap-8 flex-1 min-w-0">
@@ -36,10 +36,10 @@ export function Header({
               <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-gradient-primary-subtle/20 to-gradient-secondary-subtle/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="font-bold text-lg md:text-xl gradient-text truncate">
+              <span className="font-bold text-lg md:text-xl truncate gradient-text">
                 Web Dev Cody
               </span>
-              <span className="text-xs md:text-sm text-muted-foreground hidden sm:block">
+              <span className="text-xs md:text-sm text-foreground/80 hidden sm:block">
                 Video Ideas
               </span>
             </div>
@@ -47,10 +47,20 @@ export function Header({
 
           {/* Desktop navigation links */}
           <div className="hidden lg:flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-foreground/90 hover:text-foreground hover:bg-accent"
+              asChild
+            >
               <a href="https://webdevcody.com">webdevcody.com</a>
             </Button>
-            <Button variant="ghost" size="icon" asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-foreground/90 hover:text-foreground hover:bg-accent"
+              asChild
+            >
               <a
                 href="https://github.com/webdevcody/youtube-video-suggestions"
                 target="_blank"
@@ -108,7 +118,11 @@ export function Header({
           {/* Mobile Menu */}
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-foreground/90 hover:text-foreground hover:bg-accent"
+              >
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
@@ -116,14 +130,14 @@ export function Header({
               <div className="flex flex-col gap-6 mt-8">
                 <Button
                   variant="ghost"
-                  className="justify-start h-auto text-lg px-3 py-2"
+                  className="justify-start h-auto text-lg px-3 py-2 text-foreground/90 hover:text-foreground hover:bg-accent"
                   asChild
                 >
                   <a href="https://webdevcody.com">webdevcody.com</a>
                 </Button>
                 <Button
                   variant="ghost"
-                  className="justify-start h-auto text-lg px-3 py-2"
+                  className="justify-start h-auto text-lg px-3 py-2 text-foreground/90 hover:text-foreground hover:bg-accent"
                   asChild
                 >
                   <a
@@ -145,7 +159,9 @@ export function Header({
                           {name}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm font-medium">{name}</span>
+                      <span className="text-sm font-medium text-foreground">
+                        {name}
+                      </span>
                     </div>
                     <Button
                       onClick={() => authClient.signOut()}

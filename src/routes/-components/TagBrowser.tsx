@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, memo, useCallback } from "react";
 import { X, Edit3, Trash2 } from "lucide-react";
 import { IdeaTag } from "./IdeaTag";
 import { getTagsFn } from "../-fn/getTagsFn";
@@ -22,7 +22,7 @@ interface TagBrowserProps {
   onTagClick: (tagName: string) => void;
 }
 
-export function TagBrowser({ selectedTags, onTagClick }: TagBrowserProps) {
+function TagBrowserComponent({ selectedTags, onTagClick }: TagBrowserProps) {
   const { data: tags, isLoading } = useQuery({
     queryKey: ["tags"],
     queryFn: getTagsFn,
@@ -37,7 +37,7 @@ export function TagBrowser({ selectedTags, onTagClick }: TagBrowserProps) {
   
   const deleteTagsMutation = useDeleteTags();
   
-  const handleTagClick = (tagName: string) => {
+  const handleTagClick = useCallback((tagName: string) => {
     if (isEditMode) {
       // In edit mode, toggle selection for deletion
       setSelectedForDeletion(prev => 
@@ -49,7 +49,7 @@ export function TagBrowser({ selectedTags, onTagClick }: TagBrowserProps) {
       // Normal mode - filter ideas
       onTagClick(tagName);
     }
-  };
+  }, [isEditMode, onTagClick]);
   
   const handleCancelEdit = () => {
     setIsEditMode(false);
@@ -227,3 +227,8 @@ export function TagBrowser({ selectedTags, onTagClick }: TagBrowserProps) {
     </div>
   );
 }
+
+// Memoize TagBrowser to prevent unnecessary re-renders
+export const TagBrowser = memo(TagBrowserComponent);
+
+TagBrowser.displayName = "TagBrowser";

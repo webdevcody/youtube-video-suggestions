@@ -1,5 +1,5 @@
 import { Trash2, CheckCircle, Circle, ExternalLink } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { authClient } from "~/lib/auth-client";
 import { Button } from "~/components/ui/button";
@@ -18,7 +18,7 @@ interface IdeaCardProps {
   selectedTags: string[];
 }
 
-export function IdeaCard({ idea, onTagClick, selectedTags }: IdeaCardProps) {
+function IdeaCardComponent({ idea, onTagClick, selectedTags }: IdeaCardProps) {
   const [ideaData, setIdeaData] = useState<IdeaWithDetails>(idea);
 
   const { data: ideaQueryData } = useIdea({ ideaData });
@@ -190,15 +190,7 @@ export function IdeaCard({ idea, onTagClick, selectedTags }: IdeaCardProps) {
               {ideaData?.userName || "Anonymous"}
             </div>
             <div className="text-xs text-muted-foreground">
-              {ideaData.createdAt
-                ? new Date(ideaData.createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
-                : "Unknown date"}
+              <FormattedDate date={ideaData.createdAt ? ideaData.createdAt.toString() : null} />
             </div>
           </div>
         </div>
@@ -206,3 +198,43 @@ export function IdeaCard({ idea, onTagClick, selectedTags }: IdeaCardProps) {
     </>
   );
 }
+
+// Memoized date formatter component
+const FormattedDate = memo(({ date }: { date: string | null | undefined }) => {
+  const formatted = useMemo(() => {
+    if (!date) return "Unknown date";
+    return new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }, [date]);
+  
+  return <>{formatted}</>;
+});
+
+FormattedDate.displayName = "FormattedDate";
+
+// Memoize the IdeaCard component to prevent unnecessary re-renders
+export const IdeaCard = memo(IdeaCardComponent, (prevProps, nextProps) => {
+  // Custom comparison function for shallow equality
+  return (
+    prevProps.idea.id === nextProps.idea.id &&
+    prevProps.idea.title === nextProps.idea.title &&
+    prevProps.idea.description === nextProps.idea.description &&
+    prevProps.idea.upvoteCount === nextProps.idea.upvoteCount &&
+    prevProps.idea.published === nextProps.idea.published &&
+    prevProps.idea.youtubeUrl === nextProps.idea.youtubeUrl &&
+    prevProps.idea.userId === nextProps.idea.userId &&
+    prevProps.idea.userName === nextProps.idea.userName &&
+    prevProps.idea.userImage === nextProps.idea.userImage &&
+    prevProps.idea.createdAt === nextProps.idea.createdAt &&
+    JSON.stringify(prevProps.idea.tags) === JSON.stringify(nextProps.idea.tags) &&
+    JSON.stringify(prevProps.selectedTags) === JSON.stringify(nextProps.selectedTags) &&
+    prevProps.onTagClick === nextProps.onTagClick
+  );
+});
+
+IdeaCard.displayName = "IdeaCard";

@@ -15,22 +15,51 @@ export function useUpvoteIdea() {
       });
       await queryClient.cancelQueries({ queryKey: ["upvotes"] });
       const previousUpvotes = queryClient.getQueryData(["upvotes"]);
-      queryClient.setQueryData(["upvotes"], (old: Upvote[]) => [
+      const newUpvote = {
+        id: crypto.randomUUID(),
+        ideaId: variables.data.ideaId,
+        userId: "", // This will be filled by the server
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      queryClient.setQueryData(["upvotes"], (old: Upvote[] = []) => [
         ...old,
-        variables.data,
+        newUpvote,
       ]);
-      queryClient.setQueryData(["ideas"], (old: IdeaWithDetails[]) =>
-        old.map((idea) =>
+      
+      // Optimistically update the idea in the ideas list (unpublished)
+      queryClient.setQueryData(["ideas", false], (old: IdeaWithDetails[] | undefined) => {
+        if (!old) return old;
+        return old.map((idea) =>
           idea.id === variables.data.ideaId
-            ? { ...idea, upvoteCount: idea.upvoteCount + 1 }
+            ? { ...idea, upvoteCount: idea.upvoteCount + 1, upvoteId: newUpvote.id }
             : idea
-        )
+        );
+      });
+      
+      // Optimistically update the idea in the ideas list (published)
+      queryClient.setQueryData(["ideas", true], (old: IdeaWithDetails[] | undefined) => {
+        if (!old) return old;
+        return old.map((idea) =>
+          idea.id === variables.data.ideaId
+            ? { ...idea, upvoteCount: idea.upvoteCount + 1, upvoteId: newUpvote.id }
+            : idea
+        );
+      });
+      
+      // Update individual idea query
+      queryClient.setQueryData(
+        ["idea", variables.data.ideaId],
+        (old: IdeaWithDetails | undefined) =>
+          old ? { ...old, upvoteCount: old.upvoteCount + 1, upvoteId: newUpvote.id } : old
       );
+      
       return { previousUpvotes };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["ideas"] });
       queryClient.invalidateQueries({ queryKey: ["upvotes"] });
+      queryClient.invalidateQueries({ queryKey: ["idea", data.ideaId] });
     },
   });
 }

@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { Button } from "~/components/ui/button";
+import { memo } from "react";
 
 interface IdeaTagProps {
   name: string;
@@ -32,7 +33,7 @@ function getColorFromHash(str: string): string {
   return `hsl(${hue}, 65%, var(--tag-lightness, 45%))`;
 }
 
-export function IdeaTag({
+function IdeaTagComponent({
   name,
   isSelected = false,
   onClick,
@@ -97,3 +98,8 @@ export function IdeaTag({
     </button>
   );
 }
+
+// Memoize IdeaTag to prevent unnecessary re-renders
+export const IdeaTag = memo(IdeaTagComponent);
+
+IdeaTag.displayName = "IdeaTag";

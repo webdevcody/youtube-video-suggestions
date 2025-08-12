@@ -57,8 +57,8 @@
     --gradient-secondary: 262 83% 58%;   /* purple-600 */
     --gradient-primary-hover: 213 93% 55%; /* blue-600 */
     --gradient-secondary-hover: 258 90% 66%; /* purple-700 */
-    --gradient-primary-light: 213 96% 87%; /* blue-400 */
-    --gradient-secondary-light: 266 85% 78%; /* purple-400 */
+    --gradient-primary-light: 213 96% 45%; /* darker blue for better contrast */
+    --gradient-secondary-light: 266 85% 40%; /* darker purple for better contrast */
     --gradient-primary-subtle: 217 91% 60%; /* blue-500 with opacity */
     --gradient-secondary-subtle: 262 83% 58%; /* purple-600 with opacity */
     --glow-primary: 217 91% 60%;

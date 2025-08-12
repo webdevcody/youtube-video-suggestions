@@ -4,8 +4,9 @@ import { IdeaWithDetails } from "../-fn/getIdeaFn";
 import { useRemoveUpvoteIdea } from "../-hooks/useRemoveUpvoteIdea";
 import { useUpvoteIdea } from "../-hooks/useUpvoteIdea";
 import { useGetUpvotes } from "../-hooks/useGetUpvotes";
+import { memo, useCallback, useMemo } from "react";
 
-export function UpvoteButton({
+function UpvoteButtonComponent({
   ideaData,
   currentUserId,
 }: {
@@ -16,21 +17,27 @@ export function UpvoteButton({
   const { mutate: upvoteIdea } = useUpvoteIdea();
   const { data: upvotes } = useGetUpvotes();
 
-  const isUpvoted = upvotes?.some((upvote) => upvote.ideaId === ideaData.id);
+  // Memoize the upvote check to avoid recalculating on every render
+  const isUpvoted = useMemo(() => {
+    return upvotes?.some((upvote) => upvote.ideaId === ideaData.id) ?? false;
+  }, [upvotes, ideaData.id]);
+
+  // Memoize the click handler to prevent recreating function on every render
+  const handleClick = useCallback(() => {
+    if (!currentUserId) return;
+    if (isUpvoted) {
+      removeUpvote({ data: { ideaId: ideaData.id } });
+    } else {
+      upvoteIdea({ data: { ideaId: ideaData.id } });
+    }
+  }, [currentUserId, isUpvoted, ideaData.id, removeUpvote, upvoteIdea]);
 
   return currentUserId ? (
     <Button
       variant="ghost"
       size="sm"
       aria-label={isUpvoted ? "Remove upvote" : "Upvote"}
-      onClick={() => {
-        if (!currentUserId) return;
-        if (isUpvoted) {
-          removeUpvote({ data: { ideaId: ideaData.id } });
-        } else {
-          upvoteIdea({ data: { ideaId: ideaData.id } });
-        }
-      }}
+      onClick={handleClick}
       className="hover:bg-blue-500/10 hover:text-blue-500 transition-all duration-200"
     >
       <ThumbsUp
@@ -46,3 +53,8 @@ export function UpvoteButton({
     </div>
   );
 }
+
+// Memoize the UpvoteButton but allow re-renders when upvoteCount changes
+export const UpvoteButton = memo(UpvoteButtonComponent);
+
+UpvoteButton.displayName = "UpvoteButton";

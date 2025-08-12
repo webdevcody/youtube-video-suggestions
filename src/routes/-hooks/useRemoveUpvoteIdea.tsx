@@ -15,21 +15,43 @@ export function useRemoveUpvoteIdea() {
       });
       await queryClient.cancelQueries({ queryKey: ["upvotes"] });
       const previousUpvotes = queryClient.getQueryData(["upvotes"]);
-      queryClient.setQueryData(["upvotes"], (old: Upvote[]) =>
+      queryClient.setQueryData(["upvotes"], (old: Upvote[] = []) =>
         old.filter((upvote) => upvote.ideaId !== variables.data.ideaId)
       );
-      queryClient.setQueryData(["ideas"], (old: IdeaWithDetails[]) =>
-        old.map((idea) =>
+      
+      // Optimistically update the idea in the ideas list (unpublished)
+      queryClient.setQueryData(["ideas", false], (old: IdeaWithDetails[] | undefined) => {
+        if (!old) return old;
+        return old.map((idea) =>
           idea.id === variables.data.ideaId
-            ? { ...idea, upvoteCount: idea.upvoteCount - 1 }
+            ? { ...idea, upvoteCount: Math.max(0, idea.upvoteCount - 1), upvoteId: null }
             : idea
-        )
+        );
+      });
+      
+      // Optimistically update the idea in the ideas list (published)
+      queryClient.setQueryData(["ideas", true], (old: IdeaWithDetails[] | undefined) => {
+        if (!old) return old;
+        return old.map((idea) =>
+          idea.id === variables.data.ideaId
+            ? { ...idea, upvoteCount: Math.max(0, idea.upvoteCount - 1), upvoteId: null }
+            : idea
+        );
+      });
+      
+      // Update individual idea query
+      queryClient.setQueryData(
+        ["idea", variables.data.ideaId],
+        (old: IdeaWithDetails | undefined) =>
+          old ? { ...old, upvoteCount: Math.max(0, old.upvoteCount - 1), upvoteId: null } : old
       );
+      
       return { previousUpvotes };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["ideas"] });
       queryClient.invalidateQueries({ queryKey: ["upvotes"] });
+      queryClient.invalidateQueries({ queryKey: ["idea", data.ideaId] });
     },
   });
 }

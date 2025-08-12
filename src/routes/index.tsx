@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { IdeaCard } from "./-components/IdeaCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { IdeaFilter } from "./-components/IdeaFilter";
 import { TagBrowser } from "./-components/TagBrowser";
 import SubmitIdeaButton from "./-components/SubmitIdeaButton";
@@ -90,24 +90,24 @@ function Home() {
     });
   }, [ideas]);
 
-  // Function to toggle tag selection
-  const toggleTag = (tagName: string) => {
+  // Function to toggle tag selection - memoized to prevent re-renders
+  const toggleTag = useCallback((tagName: string) => {
     setSelectedTags((prev) =>
       prev.includes(tagName)
         ? prev.filter((tag) => tag !== tagName)
         : [...prev, tagName]
     );
-  };
+  }, []);
 
-  // Function to remove a specific tag
-  const removeTag = (tagName: string) => {
+  // Function to remove a specific tag - memoized
+  const removeTag = useCallback((tagName: string) => {
     setSelectedTags((prev) => prev.filter((tag) => tag !== tagName));
-  };
+  }, []);
 
-  // Function to clear all selected tags
-  const clearAllTags = () => {
+  // Function to clear all selected tags - memoized
+  const clearAllTags = useCallback(() => {
     setSelectedTags([]);
-  };
+  }, []);
 
   // Function to manually refresh ideas
   const handleRefreshIdeas = React.useCallback(async () => {
