@@ -70,7 +70,9 @@ function IdeaCardComponent({ idea, onTagClick, selectedTags }: IdeaCardProps) {
       <div className="relative modern-card group">
         {/* Absolutely positioned action buttons in top right */}
         <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-          <UpvoteButton ideaData={ideaData} currentUserId={currentUserId} />
+          {!isAdmin && (
+            <UpvoteButton ideaData={ideaData} currentUserId={currentUserId} />
+          )}
 
           {isAdmin && (
             <Button
@@ -111,11 +113,11 @@ function IdeaCardComponent({ idea, onTagClick, selectedTags }: IdeaCardProps) {
         </div>
 
         <div className="pr-24">
-          <div className="font-bold leading-tight tracking-tight mb-4 text-2xl gradient-text transition-all duration-300">
+          <div className="break-all whitespace-pre-wrap font-bold leading-tight tracking-tight mb-4 text-2xl gradient-text transition-all duration-300">
             {ideaData.title}
           </div>
           {ideaData.description && (
-            <div className="text-muted-foreground mb-6 leading-relaxed">
+            <div className="text-muted-foreground mb-6 leading-relaxed break-all whitespace-pre-wrap">
               {ideaData.description}
             </div>
           )}
@@ -190,7 +192,9 @@ function IdeaCardComponent({ idea, onTagClick, selectedTags }: IdeaCardProps) {
               {ideaData?.userName || "Anonymous"}
             </div>
             <div className="text-xs text-muted-foreground">
-              <FormattedDate date={ideaData.createdAt ? ideaData.createdAt.toString() : null} />
+              <FormattedDate
+                date={ideaData.createdAt ? ideaData.createdAt.toString() : null}
+              />
             </div>
           </div>
         </div>
@@ -211,7 +215,7 @@ const FormattedDate = memo(({ date }: { date: string | null | undefined }) => {
       minute: "2-digit",
     });
   }, [date]);
-  
+
   return <>{formatted}</>;
 });
 
@@ -231,8 +235,10 @@ export const IdeaCard = memo(IdeaCardComponent, (prevProps, nextProps) => {
     prevProps.idea.userName === nextProps.idea.userName &&
     prevProps.idea.userImage === nextProps.idea.userImage &&
     prevProps.idea.createdAt === nextProps.idea.createdAt &&
-    JSON.stringify(prevProps.idea.tags) === JSON.stringify(nextProps.idea.tags) &&
-    JSON.stringify(prevProps.selectedTags) === JSON.stringify(nextProps.selectedTags) &&
+    JSON.stringify(prevProps.idea.tags) ===
+      JSON.stringify(nextProps.idea.tags) &&
+    JSON.stringify(prevProps.selectedTags) ===
+      JSON.stringify(nextProps.selectedTags) &&
     prevProps.onTagClick === nextProps.onTagClick
   );
 });
